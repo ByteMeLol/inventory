@@ -3,5 +3,5 @@
         settings
     </x-slot:title>
    <x-success_alert />
-   <x-settings />
+   <x-settings :company="$company" :settings="$settings" />
 </x-layout>

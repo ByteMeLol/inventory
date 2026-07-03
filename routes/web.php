@@ -37,9 +37,8 @@ Route::get('/insurance', [InsuranceController::class, 'index'])->name('insurance
 Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('auth');
 Route::get('/staff', '\\App\\Http\\Controllers\\StaffController@index')->name('staff.index')->middleware('auth');
 Route::post('/staff', '\\App\\Http\\Controllers\\StaffController@store')->name('staff.store')->middleware('auth');
-Route::get('/settings', function () {
-    return view('settings');
-})->middleware('auth');
+Route::get('/settings', 'App\\Http\\Controllers\\SettingsController@edit')->name('settings.edit')->middleware('auth');
+Route::put('/settings', 'App\\Http\\Controllers\\SettingsController@update')->name('settings.update')->middleware('auth');
 Route::get('/profile', [ProfileController::class, 'edit'])->middleware('auth');
 Route::post('/profile', [ProfileController::class, 'update'])->middleware('auth');
 Route::get('/reports', function () {
