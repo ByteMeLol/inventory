@@ -57,8 +57,8 @@
             <div class="w-full md:w-48">
                 <select name="category" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg py-1.5 px-2.5 text-xs text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
                     <option value="">All Categories</option>
-                    <option value="mechanical">Mechanical Parts</option>
-                    <option value="tools">Industrial Tools</option>
+                    <option value="water">water</option>
+                    <option value="containers">Containers</option>
                 </select>
             </div>
             <button type="submit" class="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs py-1.5 px-4 rounded-lg transition shadow-xs">
@@ -170,8 +170,8 @@
                 <div>
                     <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Classification Group</label>
                     <select name="category" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
-                        <option value="mechanical">Mechanical Parts Line</option>
-                        <option value="tools">Industrial Tools Variant</option>
+                        <option value="water">water</option>
+                        <option value="containers">Containers</option>
                     </select>
                 </div>
 

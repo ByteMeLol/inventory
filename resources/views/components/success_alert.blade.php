@@ -1,6 +1,6 @@
 @session('success')
 <script>
-    swal.fire({
+    Swal.fire({
         icon: 'success',
         title: 'Success',
         text: '{{ session('success') }}',
