@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventory;
 use App\Models\Sale;
+use App\Models\Company;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -78,5 +80,45 @@ class SalesController extends Controller
     public function index(){
         $sales = Sale::with(['customer', 'inventory'])->where('company_id', session('company_id'))->get();
         return view('sales', compact('sales'));
+    }
+    public function updateStatus(Request $request, Sale $sale)
+    {
+        
+
+        // Ensure the sale belongs to the current company
+        if ($sale->company_id !== session('company_id')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $sale->status = 'paid';
+        $sale->save();
+
+        return redirect()->back()->with('success', 'Sale status updated successfully.');
+    }
+
+    public function downloadInvoice(Sale $sale)
+    {
+        if ($sale->company_id !== session('company_id')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $sale->load(['customer', 'inventory', 'company']);
+        $company = Company::findOrFail(session('company_id'));
+        $settings = array_merge([
+            'currency' => 'TZS',
+            'tax_rate' => 18,
+            'timezone' => 'Africa/Dar_es_Salaam',
+            'branch_name' => 'Dar es Salaam HQ',
+            'branch_code' => 'TZ-DSM-001',
+            'company_phone' => '+255 754 000 000',
+        ], $company->settings ?? []);
+
+        $filename = 'invoice-' . preg_replace('/[^A-Za-z0-9\-_]/', '-', $sale->invoice_number) . '.pdf';
+
+        return Pdf::loadView('invoices.sale', [
+            'sale' => $sale,
+            'company' => $company,
+            'settings' => $settings,
+        ])->download($filename);
     }
 }

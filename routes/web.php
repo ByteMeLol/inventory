@@ -50,5 +50,7 @@ Route::post('/insurance/policies', [InsuranceController::class, 'storePolicy'])-
 Route::post('/insurance/claims', [InsuranceController::class, 'storeClaim'])->name('insurance.claims.store')->middleware('auth');
 Route::get('/companies/{id}',[CompanyScopeConttroller::class, 'switchCompany'])->name('companies.switch')->middleware('auth');
 Route::post('/sales',[SalesController::class,'store'])->name('sales.store')->middleware('auth');
+Route::get('/sales/{sale}/invoice', [SalesController::class, 'downloadInvoice'])->name('sales.invoice.download')->middleware('auth');
+Route::put('/sales/{sale}', [SalesController::class, 'updateStatus'])->name('sales.updateStatus')->middleware('auth');
 Route::get('/inventory',[InventoryController::class ,'index'])->name('inventory.view')->middleware('auth');
 Route::post('/inventory',[InventoryController::class ,'store'])->name('inventory.store')->middleware('auth');

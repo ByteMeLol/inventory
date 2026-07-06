@@ -110,9 +110,19 @@
                                 <td class="p-4">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold  {{$sale->status=='pending'? "text-red-500": "text-green-500"}} ">{{ $sale->status }}</span>
                                 </td>
-                                <td class="p-4 text-right space-x-1">
+                                <td class="p-4 text-right space-x-1 flex items-center justify-end flex-row">
                                     <button class="text-slate-400 hover:text-slate-900 p-1 transition-colors" title="View Details"><i class="fa-solid fa-eye text-xs"></i></button>
-                                    <button class="text-slate-400 hover:text-slate-900 p-1 transition-colors" title="Print Invoice"><i class="fa-solid fa-print text-xs"></i></button>
+                                    <a href="{{ route('sales.invoice.download', $sale) }}" class="text-slate-400 hover:text-slate-900 p-1 transition-colors" title="Download Invoice PDF">
+                                        <i class="fa-solid fa-print text-xs"></i>
+                                    </a>
+                                    <button class="text-slate-400 hover:text-slate-900 p-1 transition-colors" title="Delete Record"><i class="fa-solid fa-trash text-xs"></i></button>
+                                    <form action="/sales/{{ $sale->id }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <button id="paidcheck" type="submit" class="text-slate-400 hover:text-slate-900 p-1 transition-colors" title="Mark as Paid">
+                                            Paid <i class="fa-solid fa-check text-xs"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -267,15 +277,38 @@
                 }
             }
         }
+        const paidButton = document.getElementById('paidcheck');
+            if(paidButton){
+                paidButton.addEventListener('click', function(event){
+                    event.preventDefault(); // Prevent the default form submission
+                    Swal.fire({
+                        title: 'Mark as Paid?',
+                        text: "Are you sure you want to mark this order as paid?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, mark as paid!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Submit the form
+                            paidButton.closest('form').submit();
+                        }
+                    })
+                })
+            }
+
         //invoice number auto-generation
         document.addEventListener('DOMContentLoaded', function() {
+
             const invoiceInput = document.getElementById('invoice_number');
             const inventorySelect = document.getElementById('inventory_id');
             const unitPriceInput = document.getElementById('unit_price');
             const quantityInput = document.getElementById('quantity');
             const totalAmountInput = document.getElementById('total_amount');
             const itemsSummaryInput = document.getElementById('items_summary');
-
+            const paidButton = document.getElementById('paid');
+            
             function updateAmounts() {
                 const selectedOption = inventorySelect?.selectedOptions?.[0];
                 const unitPrice = selectedOption ? Number(selectedOption.dataset.price || 0) : 0;
@@ -310,5 +343,6 @@
 
             updateAmounts();
         });
+        
     </script>
 
