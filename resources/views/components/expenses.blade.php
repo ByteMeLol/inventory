@@ -158,7 +158,7 @@
 
                     <!-- Vendor Name -->
                     <div class="space-y-1">
-                        <label for="vendor_name" class="block text-[11px] font-semibold text-slate-700">Recipient / Supplier Entity</label>
+                        <label for="vendor_name" class="block text-[11px] font-semibold text-slate-700">Expenses Name</label>
                         <input type="text" name="vendor_name" id="vendor_name" required placeholder="e.g. Continental Tool Casting Ltd" 
                                class="w-full bg-slate-50/50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-slate-900 transition-all">
                     </div>
