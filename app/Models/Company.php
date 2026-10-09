@@ -5,8 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\InsuranceClaim;
-use App\Models\InsurancePolicy;
 
 class Company extends Model
 {
@@ -32,6 +30,7 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
@@ -50,5 +49,10 @@ class Company extends Model
     public function insuranceClaims(): HasMany
     {
         return $this->hasMany(InsuranceClaim::class);
+    }
+
+    public function warehouses(): HasMany
+    {
+        return $this->hasMany(Warehouse::class);
     }
 }

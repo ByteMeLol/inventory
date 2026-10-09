@@ -2,33 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Inventory;
 use App\Models\Sale;
-use App\Models\Company;
+use App\Services\FinancePostingService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class SalesController extends Controller
 {
     //
-    public function store(Request $request){
-        //dd($request->all());
+    public function store(Request $request, FinancePostingService $finance)
+    {
+        // dd($request->all());
         $validatedData = $request->validate([
-            'customer_id'=>[
+            'customer_id' => [
                 'required',
                 Rule::exists('customers', 'id')->where(function ($query) {
                     return $query->where('company_id', session('company_id'));
                 }),
             ],
-            'inventory_id'=>[
+            'inventory_id' => [
                 'required',
                 Rule::exists('inventory', 'id')->where(function ($query) {
                     return $query->where('company_id', session('company_id'));
                 }),
             ],
-            'invoice_number'=>[
+            'invoice_number' => [
                 'required',
                 'string',
                 'max:255',
@@ -36,21 +38,33 @@ class SalesController extends Controller
                     return $query->where('company_id', session('company_id'));
                 }),
             ],
-            'billing_terms'=>['required','string','max:255'],
-            'items_summary'=>['nullable','string','max:255'],
-            'quantity'=>['required','integer','min:1'],
-            'unit_price'=>['required','numeric','min:0'],
-            'total_amount'=>['required','numeric'],
-            
+            'billing_terms' => ['required', 'string', 'max:255'],
+            'payment_method' => ['required', Rule::in(['cash', 'bank_transfer', 'card', 'mobile_money', 'credit'])],
+            'payment_reference' => ['nullable', 'string', 'max:100'],
+            'items_summary' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'unit_price' => ['required', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_reason' => ['nullable', 'string', 'max:255'],
+
         ]);
-        //checking status of a sale
-        if($validatedData['billing_terms'] == 'immediate'||$validatedData['billing_terms'] == 'cash'){
+        // checking status of a sale
+        if ($validatedData['billing_terms'] == 'immediate' || $validatedData['billing_terms'] == 'cash') {
             $status = 'paid';
-        }
-        else{
+        } else {
             $status = 'pending';
         }
-        DB::transaction(function () use ($validatedData, $status) {
+        DB::transaction(function () use ($validatedData, $status, $finance) {
+            $subtotal = round($validatedData['quantity'] * $validatedData['unit_price'], 2);
+            $discountAmount = round((float) ($validatedData['discount_amount'] ?? 0), 2);
+            if ($discountAmount > $subtotal) {
+                abort(422, 'Discount cannot be greater than the sale subtotal.');
+            }
+            if ($discountAmount > 0 && blank($validatedData['discount_reason'] ?? null)) {
+                abort(422, 'A reason is required when a discount is given.');
+            }
+            $totalAmount = round($subtotal - $discountAmount, 2);
+
             $inventoryItem = Inventory::where('company_id', session('company_id'))
                 ->where('id', $validatedData['inventory_id'])
                 ->lockForUpdate()
@@ -62,28 +76,42 @@ class SalesController extends Controller
 
             $inventoryItem->decrement('stock_count', $validatedData['quantity']);
 
-            Sale::create([
+            $sale = Sale::create([
                 'customer_id' => $validatedData['customer_id'],
                 'company_id' => session('company_id'),
                 'inventory_id' => $validatedData['inventory_id'],
                 'invoice_number' => $validatedData['invoice_number'],
                 'billing_terms' => $validatedData['billing_terms'],
+                'payment_method' => $validatedData['payment_method'],
+                'payment_reference' => $validatedData['payment_reference'] ?? null,
                 'quantity' => $validatedData['quantity'],
                 'unit_price' => $validatedData['unit_price'],
+                'discount_amount' => $discountAmount,
+                'discount_reason' => $validatedData['discount_reason'] ?? null,
+                'discount_given_by' => $discountAmount > 0 ? auth()->id() : null,
                 'item_summary' => $validatedData['items_summary'] ?: $inventoryItem->description,
-                'total_amount' => $validatedData['total_amount'],
+                'total_amount' => $totalAmount,
                 'status' => $status,
             ]);
+            $financeDescription = 'POS / sales transaction';
+            if ($discountAmount > 0) {
+                $financeDescription .= " · Discount: TZS {$discountAmount} · {$validatedData['discount_reason']}";
+            }
+            $finance->post((int) session('company_id'), 'SALES', 'Sales revenue', 'income', 'income', $totalAmount, $validatedData['invoice_number'], $sale, $financeDescription, $validatedData['payment_method']);
         });
+
         return redirect()->back()->with('success', 'Sale record created successfully.');
     }
-    public function index(){
+
+    public function index()
+    {
         $sales = Sale::with(['customer', 'inventory'])->where('company_id', session('company_id'))->get();
+
         return view('sales', compact('sales'));
     }
+
     public function updateStatus(Request $request, Sale $sale)
     {
-        
 
         // Ensure the sale belongs to the current company
         if ($sale->company_id !== session('company_id')) {
@@ -113,7 +141,7 @@ class SalesController extends Controller
             'company_phone' => '+255 754 000 000',
         ], $company->settings ?? []);
 
-        $filename = 'invoice-' . preg_replace('/[^A-Za-z0-9\-_]/', '-', $sale->invoice_number) . '.pdf';
+        $filename = 'invoice-'.preg_replace('/[^A-Za-z0-9\-_]/', '-', $sale->invoice_number).'.pdf';
 
         return Pdf::loadView('invoices.sale', [
             'sale' => $sale,

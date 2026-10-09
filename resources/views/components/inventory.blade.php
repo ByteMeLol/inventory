@@ -67,6 +67,90 @@
         </form>
     </div>
 
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Warehouse network</h2>
+                    <p class="text-[10px] text-gray-400 mt-1">Stock is controlled by warehouse and bin location.</p>
+                </div>
+                <i class="fa-solid fa-location-crosshairs text-gray-300"></i>
+            </div>
+            <div class="space-y-2">
+                @forelse ($warehouses as $warehouse)
+                    <div class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2">
+                        <div>
+                            <span class="font-mono text-[10px] font-bold text-gray-900">{{ $warehouse->code }}</span>
+                            <span class="ml-2 text-[11px] text-gray-600">{{ $warehouse->name }}</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">{{ $warehouse->locations->count() }} locations</span>
+                    </div>
+                @empty
+                    <p class="rounded-lg border border-dashed border-gray-200 p-3 text-[11px] text-gray-400">No warehouse has been configured yet.</p>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <form method="POST" action="{{ route('inventory.categories.store') }}" class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs space-y-2">
+                @csrf
+                <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Add product category</h2>
+                <div class="grid grid-cols-2 gap-2"><input name="name" required placeholder="Category name" class="rounded border p-2 text-xs"><input name="code" required placeholder="Code" class="rounded border p-2 text-xs"></div>
+                <button class="rounded bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white">Create category</button>
+            </form>
+            <form method="POST" action="{{ route('inventory.units.store') }}" class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs space-y-2">
+                @csrf
+                <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Add measurement unit</h2>
+                <div class="grid grid-cols-3 gap-2"><input name="name" required placeholder="Kilogram" class="rounded border p-2 text-xs"><input name="symbol" required placeholder="kg" class="rounded border p-2 text-xs"><input name="conversion_factor" required value="1" type="number" step="0.000001" class="rounded border p-2 text-xs"></div>
+                <button class="rounded bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white">Create unit</button>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-2">
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+                <div class="mb-3 flex items-center justify-between">
+                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Product categories</h2><p class="mt-1 text-[10px] text-gray-400">Classification groups used by goods.</p></div>
+                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">{{ $inventoryCategories->count() }}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @forelse($inventoryCategories as $category)
+                        <span class="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[10px] font-semibold text-gray-700">{{ $category->name }} <span class="font-mono font-normal text-gray-400">{{ $category->code }}</span></span>
+                    @empty
+                        <span class="text-xs text-gray-400">No categories created yet.</span>
+                    @endforelse
+                </div>
+            </div>
+            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+                <div class="mb-3 flex items-center justify-between">
+                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Measurement units</h2><p class="mt-1 text-[10px] text-gray-400">Units available when registering goods.</p></div>
+                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">{{ $inventoryUnits->count() }}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @forelse($inventoryUnits as $unit)
+                        <span class="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[10px] font-semibold text-gray-700">{{ $unit->name }} <span class="font-mono font-normal text-gray-400">{{ $unit->symbol }}</span></span>
+                    @empty
+                        <span class="text-xs text-gray-400">No units created yet.</span>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-900 rounded-xl p-4 shadow-xs text-white">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider">Operational controls</h2>
+                    <p class="text-[10px] text-slate-400 mt-1">Use the stock ledger for receipts, issues, adjustments, and reservations.</p>
+                </div>
+                <i class="fa-solid fa-arrow-right-arrow-left text-slate-500"></i>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-[10px]">
+                <span class="rounded-lg bg-white/10 px-3 py-2">Receipts are traceable</span>
+                <span class="rounded-lg bg-white/10 px-3 py-2">Issues cannot go negative</span>
+                <span class="rounded-lg bg-white/10 px-3 py-2">Reservations are isolated</span>
+                <span class="rounded-lg bg-white/10 px-3 py-2">Every movement is immutable</span>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
@@ -155,11 +239,41 @@
                     <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Unit Price</label>
                     <input type="number" step="0.01" name="unit_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
                 </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Buying Price</label>
+                        <input type="number" step="0.000001" name="buying_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Selling Price</label>
+                        <input type="number" step="0.000001" name="selling_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Initial Stock Count</label>
                         <input type="number" name="stock_count" value="0" min="0" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Category</label>
+                            <select name="category_id" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
+                                <option value="">Legacy category text</option>
+                                @foreach ($inventoryCategories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }} ({{ $category->code }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Unit</label>
+                            <select name="unit_id" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
+                                <option value="">Select unit</option>
+                                @foreach ($inventoryUnits as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Safety Minimum Threshold</label>

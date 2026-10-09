@@ -73,9 +73,17 @@
                     </a>
                     <a href="/inventory" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ Request::is('inventory*') ? 'bg-[#12b1df] text-white' : 'text-blue-100 hover:bg-[#12b1df]/50 hover:text-white' }} transition group">
                         <i class="fa-solid fa-store w-5 text-center mr-3 text-blue-300 group-hover:text-white text-base"></i>
-                        inventory
+                        Inventory
+                    </a>
+                    <a href="/purchases" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ Request::is('purchases*') || Request::is('suppliers*') ? 'bg-[#12b1df] text-white' : 'text-blue-100 hover:bg-[#12b1df]/50 hover:text-white' }} transition group">
+                        <i class="fa-solid fa-truck-ramp-box w-5 text-center mr-3 text-blue-300 group-hover:text-white text-base"></i>
+                        Purchases & Suppliers
                     </a>
                 @endunless
+                <a href="/finance" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ Request::is('finance*') ? 'bg-[#12b1df] text-white' : 'text-blue-100 hover:bg-[#12b1df]/50 hover:text-white' }} transition group">
+                    <i class="fa-solid fa-coins w-5 text-center mr-3 text-blue-300 group-hover:text-white text-base"></i>
+                    Finance
+                </a>
                 <a href="/expenses" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ Request::is('expenses*') ? 'bg-[#12b1df] text-white' : 'text-blue-100 hover:bg-[#12b1df]/50 hover:text-white' }} transition group">
                     <i class="fa-solid fa-credit-card w-5 text-center mr-3 text-blue-300 group-hover:text-white text-base"></i>
                     Expenses

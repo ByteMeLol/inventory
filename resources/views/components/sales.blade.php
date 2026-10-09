@@ -98,7 +98,7 @@
                                 <td class="p-4 font-mono font-bold text-slate-900">{{ $sale->invoice_number }}</td>
                                 <td class="p-4">
                                     <span class="text-slate-900 block font-bold">{{ $sale->customer->company_name }}</span>
-                                    <span class="text-[10px] text-slate-400 block font-normal">Terms: {{ $sale->billing_terms }}</span>
+                                    <span class="text-[10px] text-slate-400 block font-normal">Terms: {{ $sale->billing_terms }} · Payment: {{ $sale->payment_method ? str_replace('_', ' ', ucfirst($sale->payment_method)) : 'Not recorded' }}</span>
                                 </td>
                                     <td class="p-4 text-slate-500 max-w-[240px] truncate">
                                         {{ $sale->item_summary }}
@@ -106,7 +106,14 @@
                                             <div class="text-[10px] text-slate-400 mt-0.5">SKU: {{ $sale->inventory->sku }} | Qty: {{ $sale->quantity }}</div>
                                         @endif
                                     </td>
-                                <td class="p-4 text-center text-slate-900 font-mono font-bold">TZS {{ number_format($sale->total_amount, 2) }}</td>
+                                <td class="p-4 text-center">
+                                    <span class="block text-slate-900 font-mono font-bold">TZS {{ number_format($sale->total_amount, 2) }}</span>
+                                    @if((float) $sale->discount_amount > 0)
+                                        <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-700" title="{{ $sale->discount_reason }}">
+                                            <i class="fa-solid fa-tag"></i> Discount TZS {{ number_format($sale->discount_amount, 2) }}
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="p-4">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold  {{$sale->status=='pending'? "text-red-500": "text-green-500"}} ">{{ $sale->status }}</span>
                                 </td>
@@ -212,6 +219,32 @@
                             <input type="number" step="0.01" name="unit_price" id="unit_price" required class="w-full bg-slate-50/50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-slate-900 transition-all font-mono">
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label for="discount_amount" class="block text-[11px] font-semibold text-slate-700">Discount amount</label>
+                            <input type="number" step="0.01" min="0" value="0" name="discount_amount" id="discount_amount" placeholder="0.00" class="w-full bg-amber-50/40 border border-amber-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-amber-500 font-mono">
+                        </div>
+                        <div class="space-y-1">
+                            <label for="discount_reason" class="block text-[11px] font-semibold text-slate-700">Discount reason <span class="font-normal text-slate-400">(required if used)</span></label>
+                            <input type="text" name="discount_reason" id="discount_reason" placeholder="e.g. Approved customer discount" class="w-full bg-amber-50/40 border border-amber-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-amber-500">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label for="payment_method" class="block text-[11px] font-semibold text-slate-700">Payment Method</label>
+                            <select name="payment_method" id="payment_method" required class="w-full bg-slate-50/50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-800 outline-none focus:bg-white focus:border-slate-900">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank transfer</option>
+                                <option value="card">Card</option>
+                                <option value="mobile_money">Mobile money</option>
+                                <option value="credit">Credit / unpaid</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label for="payment_reference" class="block text-[11px] font-semibold text-slate-700">Payment Reference</label>
+                            <input type="text" name="payment_reference" id="payment_reference" placeholder="Receipt or transfer reference" class="w-full bg-slate-50/50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-slate-900">
+                        </div>
+                    </div>
                     
                     <!-- Invoice metadata parameters -->
                     <div class="grid grid-cols-2 gap-3">
@@ -245,8 +278,8 @@
 
                     <!-- Financial Total Field -->
                     <div class="space-y-1">
-                        <label for="total_amount" class="block text-[11px] font-semibold text-slate-700">Gross Transaction Value ($)</label>
-                        <input type="number" step="0.01" name="total_amount" id="total_amount" required placeholder="0.00" 
+                        <label for="total_amount" class="block text-[11px] font-semibold text-slate-700">Final amount after discount</label>
+                        <input type="number" step="0.01" name="total_amount" id="total_amount" readonly required placeholder="0.00"
                                class="w-full bg-slate-50/50 border border-slate-200 rounded-lg py-1.5 px-2.5 text-xs text-slate-900 outline-none focus:bg-white focus:border-slate-900 transition-all font-mono">
                     </div>
 
@@ -306,6 +339,7 @@
             const unitPriceInput = document.getElementById('unit_price');
             const quantityInput = document.getElementById('quantity');
             const totalAmountInput = document.getElementById('total_amount');
+            const discountAmountInput = document.getElementById('discount_amount');
             const itemsSummaryInput = document.getElementById('items_summary');
             const paidButton = document.getElementById('paid');
             
@@ -313,7 +347,9 @@
                 const selectedOption = inventorySelect?.selectedOptions?.[0];
                 const unitPrice = selectedOption ? Number(selectedOption.dataset.price || 0) : 0;
                 const quantity = Number(quantityInput?.value || 0);
-                const total = unitPrice * quantity;
+                const subtotal = unitPrice * quantity;
+                const discount = Number(discountAmountInput?.value || 0);
+                const total = Math.max(0, subtotal - discount);
 
                 if (unitPriceInput && unitPrice > 0) {
                     unitPriceInput.value = unitPrice.toFixed(2);
@@ -340,9 +376,11 @@
             if (quantityInput) {
                 quantityInput.addEventListener('input', updateAmounts);
             }
+            if (discountAmountInput) {
+                discountAmountInput.addEventListener('input', updateAmounts);
+            }
 
             updateAmounts();
         });
         
     </script>
-

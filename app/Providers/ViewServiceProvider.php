@@ -4,14 +4,18 @@ namespace App\Providers;
 
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\InsuranceClaim;
 use App\Models\InsurancePolicy;
-use App\Models\Expense;
 use App\Models\Inventory;
+use App\Models\InventoryCategory;
+use App\Models\InventoryUnit;
+use App\Models\Role;
 use App\Models\Sale;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\View; // 
+use App\Models\Warehouse;
+use Illuminate\Support\Facades\Auth; //
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class ViewServiceProvider extends ServiceProvider
@@ -34,18 +38,18 @@ class ViewServiceProvider extends ServiceProvider
         View::composer('components.layout', function ($view) {
             // Fetch all active companies from the database
             $companies = Company::orderBy('name')->get();
-            
+
             // Pass the $companies variable directly into the layout file
             $view->with('companies', $companies);
         });
-         
+
         View::composer('components.customers', function ($view) {
             $companyId = session('company_id');
 
             $customers = Customer::when($companyId, function ($query) use ($companyId) {
                 $query->where('company_id', $companyId);
             })->orderBy('company_name')->paginate(10);
-            //counting number of customers
+            // counting number of customers
             // Pass the $companies variable directly into the layout file
             $view->with('customers', $customers);
         });
@@ -53,13 +57,13 @@ class ViewServiceProvider extends ServiceProvider
         View::composer('components.expenses', function ($view) {
             // Fetch all active companies from the database
             $expenses = Expense::orderBy('expense_date')->paginate(10);
-            //sum of expenses for curren month with settlement status cleared
+            // sum of expenses for curren month with settlement status cleared
             $currentMonthClearedExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth())->where('status', 'cleared')->sum('amount');
-            //dd($currentMonthClearedExpenses);
+            // dd($currentMonthClearedExpenses);
             $currentMonthExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth());
-            //counting number of customers
+            // counting number of customers
             // Pass the $companies variable directly into the layout file
-            //total expenses cleared last month
+            // total expenses cleared last month
             $lastMonthClearedExpenses = $expenses->where('expense_date', '>=', now()->subMonth()->startOfMonth())->where('expense_date', '<=', now()->subMonth()->endOfMonth())->where('status', 'cleared')->sum('amount');
             $view->with('currentMonthClearedExpenses', $currentMonthClearedExpenses);
             $view->with('currentMonthExpenses', $currentMonthExpenses);
@@ -68,9 +72,9 @@ class ViewServiceProvider extends ServiceProvider
         });
 
         View::composer('components.sales', function ($view) {
-            $companyId=session('company_id');
+            $companyId = session('company_id');
 
-            //fetch customers and inventory for the active company
+            // fetch customers and inventory for the active company
             $customers = Customer::when($companyId, function ($query) use ($companyId) {
                 $query->where('company_id', $companyId);
             })->orderBy('company_name')->get();
@@ -79,19 +83,19 @@ class ViewServiceProvider extends ServiceProvider
                 $query->where('company_id', $companyId);
             })->orderBy('description')->get();
 
-            //sales records
-            $sales = Sale::where('company_id',$companyId)->orderBy('created_at', 'desc')->paginate(10);
-            //paid sales in a current month
+            // sales records
+            $sales = Sale::where('company_id', $companyId)->orderBy('created_at', 'desc')->paginate(10);
+            // paid sales in a current month
 
-            $paidsales=$sales->where('created_at', '>=', now()->startOfMonth())->where('created_at', '<=', now()->endOfMonth())->where('status', 'paid')->sum('total_amount');
-           
+            $paidsales = $sales->where('created_at', '>=', now()->startOfMonth())->where('created_at', '<=', now()->endOfMonth())->where('status', 'paid')->sum('total_amount');
+
             $view->with('customers', $customers);
             $view->with('inventoryItems', $inventoryItems);
-            $view->with('sales', $sales);  
-            $view->with('paidsales',$paidsales);
+            $view->with('sales', $sales);
+            $view->with('paidsales', $paidsales);
         });
 
-        view::composer('components.inventory', function ($view) {
+        View::composer('components.inventory', function ($view) {
             $companyId = session('company_id') ?: Auth::user()?->company_id;
 
             $inventory = Inventory::when($companyId, function ($query) use ($companyId) {
@@ -104,6 +108,14 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with('lowStockCount', $lowStockCount);
             $view->with('inventory', $inventory);
+            $view->with('inventoryCategories', InventoryCategory::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get());
+            $view->with('inventoryUnits', InventoryUnit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get());
+            $warehouses = Warehouse::with('locations')
+                ->where('company_id', $companyId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+            $view->with('warehouses', $warehouses);
         });
 
         View::composer('components.dashboard', function ($view) {
@@ -247,7 +259,7 @@ class ViewServiceProvider extends ServiceProvider
                 : Company::where('id', $user->company_id)->orderBy('name')->get();
 
             $view->with('staffMembers', User::with(['company', 'role'])->orderBy('created_at', 'desc')->paginate(10));
-            $view->with('roles', \App\Models\Role::orderBy('name')->get());
+            $view->with('roles', Role::orderBy('name')->get());
             $view->with('companies', $companies);
             $view->with('canManageUsers', true);
             $view->with('currentUser', $user);
@@ -302,7 +314,7 @@ class ViewServiceProvider extends ServiceProvider
                         'pointer' => $expense->reference,
                         'compiled_by' => $expense->expense_name,
                         'scope' => $expense->category,
-                        'output' => 'TZS ' . number_format($expense->amount, 2),
+                        'output' => 'TZS '.number_format($expense->amount, 2),
                     ];
                 }),
                 'inventory_valuation' => $companyInventory->map(function ($item) {
@@ -310,15 +322,15 @@ class ViewServiceProvider extends ServiceProvider
                         'pointer' => $item->sku,
                         'compiled_by' => $item->description,
                         'scope' => $item->category,
-                        'output' => 'TZS ' . number_format(($item->unit_price ?? 0) * ($item->stock_count ?? 0), 2),
+                        'output' => 'TZS '.number_format(($item->unit_price ?? 0) * ($item->stock_count ?? 0), 2),
                     ];
                 }),
-                'insurance_summary' => $insurancePolicies->map(function ($policy) use ($selectedCompany) {
+                'insurance_summary' => $insurancePolicies->map(function ($policy) {
                     return (object) [
                         'pointer' => $policy->policy_number,
                         'compiled_by' => $policy->customer->company_name ?? 'Policy Holder',
-                        'scope' => $policy->policy_type . ' · ' . $policy->status,
-                        'output' => 'TZS ' . number_format($policy->premium_amount, 2),
+                        'scope' => $policy->policy_type.' · '.$policy->status,
+                        'output' => 'TZS '.number_format($policy->premium_amount, 2),
                     ];
                 }),
                 default => $companySales->map(function ($sale) {
@@ -326,7 +338,7 @@ class ViewServiceProvider extends ServiceProvider
                         'pointer' => $sale->invoice_number,
                         'compiled_by' => $sale->customer->company_name ?? 'Customer',
                         'scope' => 'Sales',
-                        'output' => 'TZS ' . number_format($sale->total_amount, 2),
+                        'output' => 'TZS '.number_format($sale->total_amount, 2),
                     ];
                 }),
             };

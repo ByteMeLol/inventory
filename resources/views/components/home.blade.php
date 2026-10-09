@@ -53,6 +53,20 @@
                             </div>
                         </a>
 
+                        <a href="/purchases" class="group p-4 rounded-lg border border-slate-200/80 bg-slate-50/20 hover:bg-white hover:border-slate-400 hover:shadow-sm transition-all flex items-start space-x-3.5">
+                            <div class="w-9 h-9 rounded-lg border border-slate-200/60 text-slate-400 group-hover:text-slate-900 flex items-center justify-center text-sm bg-white transition-colors shadow-sm">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
+                            </div>
+                            <div><h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Purchases & Suppliers</h4><p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Record purchase orders, suppliers, and goods received.</p></div>
+                        </a>
+
+                        <a href="/finance" class="group p-4 rounded-lg border border-slate-200/80 bg-slate-50/20 hover:bg-white hover:border-slate-400 hover:shadow-sm transition-all flex items-start space-x-3.5">
+                            <div class="w-9 h-9 rounded-lg border border-slate-200/60 text-slate-400 group-hover:text-slate-900 flex items-center justify-center text-sm bg-white transition-colors shadow-sm">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div><h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Finance Ledger</h4><p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Track categorized income, expenses, assets, and liabilities.</p></div>
+                        </a>
+
                         <a href="/inventory" class="group p-4 rounded-lg border border-slate-200/80 bg-slate-50/20 hover:bg-white hover:border-slate-400 hover:shadow-sm transition-all flex items-start space-x-3.5">
                             <div class="w-9 h-9 rounded-lg border border-slate-200/60 text-slate-400 group-hover:text-slate-900 flex items-center justify-center text-sm bg-white transition-colors shadow-sm">
                                 <i class="fa-solid fa-warehouse"></i>
