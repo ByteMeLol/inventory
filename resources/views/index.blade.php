@@ -92,6 +92,7 @@
 							id="remember"
 							name="remember"
 							type="checkbox"
+							{{ old('remember') ? 'checked' : '' }}
 							class="h-4 w-4 border-slate-300 text-[#638a6d] focus:ring-[#638a6d]/40"
 						>
 						<label for="remember" class="text-sm text-slate-600">Keep me signed in</label>
@@ -113,6 +114,7 @@
 		</section>
 	</main>
 </body>
+<x-form_persistence />
 <script>
 	const passInput = document.getElementById('password');
 	const togglerButton = document.getElementById('password-toggle');

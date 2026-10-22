@@ -21,6 +21,11 @@
 /storage/*.key
 /storage/pail
 /vendor
+# Local Docker configuration
+/Dockerfile
+/.dockerignore
+/docker-compose.yml
+/docker/
 _ide_helper.php
 Homestead.json
 Homestead.yaml

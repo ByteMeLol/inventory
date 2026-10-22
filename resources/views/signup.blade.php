@@ -24,6 +24,7 @@
 						id="company_name"
 						name="company_name"
 						type="text"
+						value="{{ old('company_name') }}"
 						required
 						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Your business name"
@@ -36,18 +37,20 @@
 						name="first_name"
 						type="text"
 						autocomplete="name"
+						value="{{ old('first_name') }}"
 						required
 						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Your first name"
 					>
 				</div>
                 <div class="space-y-2">
-					<label for="name" class="block text-sm font-medium text-slate-700">Last name</label>
+					<label for="last_name" class="block text-sm font-medium text-slate-700">Last name</label>
 					<input
-						id="name"
+						id="last_name"
 						name="last_name"
 						type="text"
 						autocomplete="name"
+						value="{{ old('last_name') }}"
 						required
 						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Your last name"
@@ -61,6 +64,7 @@
 						name="email"
 						type="email"
 						autocomplete="email"
+						value="{{ old('email') }}"
 						required
 						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="you@example.com"
@@ -74,6 +78,7 @@
 						name="phone"
 						type="tel"
 						autocomplete="tel"
+						value="{{ old('phone') }}"
 						required
 						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="your phone number"
@@ -135,6 +140,7 @@
 		</section>
 	</main>
 </body>
+<x-form_persistence />
 <script>
 	//password visibility toggle
 	const passInput=document.getElementById('password');

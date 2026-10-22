@@ -44,7 +44,9 @@ class SignupController extends Controller
 
         $dublicateEmailCheck=User::where('email', $validatedData['email'])->first();
         if($dublicateEmailCheck){
-            return back()->withErrors(['email'=>'Email already exists.']);
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors(['email'=>'Email already exists.']);
         }
         if(User::where('role_id', 1)->exists()){
 
