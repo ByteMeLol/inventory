@@ -32,7 +32,6 @@
                         <option value="sales_summary" @selected($selectedStatementClass === 'sales_summary')>Sales Orders Ledger Summary</option>
                         <option value="expense_outlays" @selected($selectedStatementClass === 'expense_outlays')>Factory Overheads & Expenses</option>
                         <option value="inventory_valuation" @selected($selectedStatementClass === 'inventory_valuation')>Stock Item Valuation Ledger</option>
-                        <option value="insurance_summary" @selected($selectedStatementClass === 'insurance_summary')>Insurance Policy & Claims Summary</option>
                     </select>
                 </div>
 

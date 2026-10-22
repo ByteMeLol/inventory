@@ -14,14 +14,11 @@ class CompanyScopeConttroller extends Controller
         $user = Auth::user();
 
     //dd($id);
-        // Enforce security check: Verify if user is super_admin before changing scopes
-        if (! $user?->isSuperAdmin()) {
+        $company = Company::where('is_active', true)->findOrFail($id);
+
+        if (! $user?->belongsToCompany($company->id)) {
             abort(403, 'Unauthorized scope alteration request.');
         }
-
-        $company = Company::all()->find($id);
-
-        //dd($company);
 
         // Store both variables safely inside the session context
         session([

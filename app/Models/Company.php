@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Company extends Model
 {
@@ -31,6 +32,13 @@ class Company extends Model
         return $this->hasMany(User::class);
     }
 
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'company_memberships')
+            ->withPivot(['role_id', 'status', 'joined_at'])
+            ->withTimestamps();
+    }
+
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
@@ -39,16 +47,6 @@ class Company extends Model
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
-    }
-
-    public function insurancePolicies(): HasMany
-    {
-        return $this->hasMany(InsurancePolicy::class);
-    }
-
-    public function insuranceClaims(): HasMany
-    {
-        return $this->hasMany(InsuranceClaim::class);
     }
 
     public function warehouses(): HasMany

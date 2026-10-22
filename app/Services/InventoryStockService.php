@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Inventory;
+use App\Models\InventoryAuditLog;
 use App\Models\InventoryMovement;
 use App\Models\InventoryReservation;
 use App\Models\InventoryStockBalance;
@@ -136,9 +137,14 @@ class InventoryStockService
                 throw ValidationException::withMessages(['quantity' => 'This operation would make stock negative.']);
             }
 
+            $before = [
+                'on_hand' => (float) $balance->on_hand,
+                'reserved' => (float) $balance->reserved,
+            ];
             $balance->increment('on_hand', $quantity);
+            $balance->refresh();
 
-            return InventoryMovement::create([
+            $movement = InventoryMovement::create([
                 'company_id' => $companyId,
                 'inventory_id' => $inventoryId,
                 'warehouse_location_id' => $locationId,
@@ -149,6 +155,21 @@ class InventoryStockService
                 'reason' => $reason,
                 'occurred_at' => now(),
             ]);
+            InventoryAuditLog::create([
+                'company_id' => $companyId,
+                'inventory_id' => $inventoryId,
+                'user_id' => $user?->id,
+                'action' => 'stock.'.$type,
+                'quantity' => $quantity,
+                'before_state' => $before,
+                'after_state' => [
+                    'on_hand' => (float) $balance->on_hand,
+                    'reserved' => (float) $balance->reserved,
+                ],
+                'metadata' => ['reason' => $reason],
+            ]);
+
+            return $movement;
         });
     }
 

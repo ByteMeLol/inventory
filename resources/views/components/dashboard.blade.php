@@ -1,275 +1,94 @@
-
-
-    <!-- PAGE HEADER AREA -->
-    <div class="mb-8 rounded-3xl bg-[#025c78] px-6 py-6 text-white shadow-xl shadow-slate-900/10 relative overflow-hidden">
-        <div class="absolute -top-10 right-0 h-32 w-32 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="absolute -bottom-8 left-8 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl"></div>
-
-        <div class="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div class="space-y-3">
-                <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                    {{ $currentCompany->name ?? 'No Company Assigned' }}
+<div class="mx-auto w-full max-w-[1380px]">
+    <section class="mb-7 border border-[#dfe5e1] bg-[#edf2ee] px-6 py-7 sm:px-8">
+        <div class="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <div class="mb-4 inline-flex items-center gap-2 border border-[#c7d8ca] bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#315c3b]">
+                    <span class="h-1.5 w-1.5 bg-[#3f9b58]"></span>
+                    {{ $currentCompany->name ?? 'No company selected' }}
                 </div>
-                <div>
-                    <h1 class="text-3xl font-black tracking-tight sm:text-4xl">Welcome back, {{ auth()->user()->first_name }}</h1>
-                    <p class="mt-2 max-w-2xl text-sm text-white/75">Live dashboard metrics for the currently selected company scope.</p>
-                </div>
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#738278]">Overview</p>
+                <h1 class="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#17231b] sm:text-4xl">Welcome back, {{ auth()->user()->first_name }}</h1>
+                <p class="mt-2 text-sm text-[#6f7d73]">A clear view of stock, orders, and operational health.</p>
             </div>
-
-            <div class="grid w-full gap-3 sm:grid-cols-2 xl:w-auto xl:min-w-[320px]">
-                <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-white/60">Company</p>
-                    <p class="mt-2 text-sm font-semibold">{{ $currentCompany->name ?? 'No Company Assigned' }}</p>
-                </div>
-                <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-white/60">Role</p>
-                    <p class="mt-2 text-sm font-semibold">{{ str_replace('_', ' ', auth()->user()->role->name ?? 'user') }}</p>
-                </div>
+            <div class="flex flex-wrap gap-2">
+                <button class="border border-[#cbd8ce] bg-white px-3.5 py-2 text-xs font-medium text-[#415247] hover:bg-[#f8fbf8]"><i class="fa-regular fa-calendar mr-1.5 text-[#77917d]"></i>This month</button>
+                <button class="bg-[#173b26] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#285b38]"><i class="fa-solid fa-download mr-1.5 text-[#acd8b4]"></i>Export report</button>
             </div>
         </div>
-
-        <div class="relative mt-6 flex flex-wrap gap-2">
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[11px] font-semibold">{{ auth()->user()->email }}</span>
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[11px] font-semibold">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</span>
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[11px] font-semibold">{{ auth()->user()->created_at?->format('M d, Y') }}</span>
+        <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 border-t border-[#d6e1d8] pt-4 text-[11px] text-[#6c7d70]">
+            <span><i class="fa-regular fa-building mr-1.5 text-[#7fa188]"></i>{{ $currentCompany->name ?? 'Workspace' }}</span>
+            <span><i class="fa-regular fa-user mr-1.5 text-[#7fa188]"></i>{{ auth()->user()->email }}</span>
+            <span><i class="fa-regular fa-clock mr-1.5 text-[#7fa188]"></i>Updated {{ now()->format('M d, Y') }}</span>
         </div>
+    </section>
 
-        <div class="relative mt-6 flex items-center justify-end gap-2">
-            <button class="rounded-lg border border-white/10 bg-white/10 px-3.5 py-2 text-xs font-medium text-white transition hover:bg-white/15">
-                <i class="fa-solid fa-calendar-days mr-1.5 text-white/70"></i> This Month
-            </button>
-            <button class="rounded-lg border border-white bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 transition hover:bg-slate-100">
-                <i class="fa-solid fa-cloud-arrow-down mr-1.5 text-slate-500"></i> Master Report
-            </button>
+    <section class="mb-7 grid grid-cols-1 border-y border-l border-[#dfe5e1] bg-white sm:grid-cols-2 lg:grid-cols-4">
+        <div class="flex items-center justify-between border-b border-r border-[#dfe5e1] p-5 lg:border-b-0">
+            <div><p class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#849389]">Active inventory</p><p class="mt-2 text-2xl font-semibold tracking-tight text-[#1b2b20]">{{ number_format($activeInventoryCount) }} <small class="text-xs font-normal text-[#94a199]">units</small></p></div>
+            <i class="fa-solid fa-cubes-stacked text-[#86a58c]"></i>
         </div>
+        <div class="flex items-center justify-between border-b border-r border-[#dfe5e1] p-5 lg:border-b-0">
+            <div><p class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#849389]">Low stock alerts</p><p class="mt-2 text-2xl font-semibold tracking-tight text-[#1b2b20]">{{ $lowStockCount }} <small class="text-xs font-normal text-[#b37a42]">lines</small></p></div>
+            <i class="fa-solid fa-triangle-exclamation text-[#c58b50]"></i>
+        </div>
+        <div class="flex items-center justify-between border-b border-r border-[#dfe5e1] p-5 lg:border-b-0">
+            <div><p class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#849389]">Monthly orders</p><p class="mt-2 text-2xl font-semibold tracking-tight text-[#1b2b20]">TZS {{ number_format($monthlyOrders, 2) }}</p></div>
+            <i class="fa-solid fa-arrow-trend-up text-[#86a58c]"></i>
+        </div>
+        <div class="flex items-center justify-between border-r border-[#dfe5e1] p-5">
+            <div><p class="text-[10px] font-bold uppercase tracking-[0.14em] text-[#849389]">Team accounts</p><p class="mt-2 text-2xl font-semibold tracking-tight text-[#1b2b20]">{{ $teamAccounts }} <small class="text-xs font-normal text-[#94a199]">active</small></p></div>
+            <i class="fa-solid fa-users text-[#86a58c]"></i>
+        </div>
+    </section>
+
+    <div class="mb-7 grid grid-cols-1 gap-7 lg:grid-cols-3">
+        <section class="border border-[#dfe5e1] bg-white p-5 lg:col-span-2">
+            <div class="mb-5 flex items-start justify-between border-b border-[#e8ede9] pb-4">
+                <div><h2 class="text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">Revenue trend</h2><p class="mt-1 text-[11px] text-[#8a978e]">Order value across the last six months</p></div>
+                <span class="border border-[#e1e9e2] px-2 py-1 text-[9px] text-[#8a978e]">{{ $currentCompany->name ?? 'Workspace' }}</span>
+            </div>
+            <div class="h-64"><canvas id="revenueTrendChart"></canvas></div>
+        </section>
+        <section class="border border-[#dfe5e1] bg-white p-5">
+            <div class="mb-5 flex items-start justify-between border-b border-[#e8ede9] pb-4"><div><h2 class="text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">Inventory share</h2><p class="mt-1 text-[11px] text-[#8a978e]">Stock by category</p></div><i class="fa-solid fa-chart-pie text-xs text-[#9aad9f]"></i></div>
+            <div class="h-64"><canvas id="inventoryShareChart"></canvas></div>
+        </section>
     </div>
 
-    <!-- 📊 UNIFORM MINIMAL DASHBOARD CARD GRID -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Card 1: Active Inventory -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-            <div class="space-y-1.5">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Active Inventory</span>
-                <div class="flex items-baseline space-x-1">
-                    <span class="text-3xl font-bold text-slate-900 tracking-tight">{{ number_format($activeInventoryCount) }}</span>
-                    <span class="text-xs font-medium text-slate-400">units</span>
-                </div>
-            </div>
-            <div class="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center text-base shadow-sm">
-                <i class="fa-solid fa-gears"></i>
-            </div>
-        </div>
-
-        <!-- Card 2: Low Stock Alerts -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-            <div class="space-y-1.5">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Low Stock Alerts</span>
-                <div class="flex items-baseline space-x-1">
-                    <span class="text-3xl font-bold text-slate-900 tracking-tight">{{ $lowStockCount }}</span>
-                    <span class="text-xs font-medium text-amber-600 font-semibold uppercase tracking-wide">Lines</span>
-                </div>
-            </div>
-            <div class="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center text-base shadow-sm">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-        </div>
-
-        <!-- Card 3: Monthly Orders -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-            <div class="space-y-1.5">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Monthly Orders</span>
-                <div class="flex items-baseline space-x-1">
-                    <span class="text-3xl font-bold text-slate-900 tracking-tight">TZS {{ number_format($monthlyOrders, 2) }}</span>
-                    <span class="text-xs font-medium text-slate-400">TZS</span>
-                </div>
-            </div>
-            <div class="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center text-base shadow-sm">
-                <i class="fa-solid fa-scale-balanced"></i>
-            </div>
-        </div>
-
-        <!-- Card 4: Team Accounts -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex items-center justify-between hover:border-slate-300 transition-all duration-200">
-            <div class="space-y-1.5">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Team Accounts</span>
-                <div class="flex items-baseline space-x-1">
-                    <span class="text-3xl font-bold text-slate-900 tracking-tight">{{ $teamAccounts }}</span>
-                    <span class="text-xs font-medium text-slate-400">active</span>
-                </div>
-            </div>
-            <div class="w-10 h-10 rounded-lg border border-slate-200 text-slate-400 flex items-center justify-center text-base shadow-sm">
-                <i class="fa-solid fa-users"></i>
-            </div>
-        </div>
-    </div>
-
-    <!-- 📊 GRAPHICAL METRICS VIEWPORTS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Big Chart: Order Value Trends (Takes 2 columns) -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-sm lg:col-span-2 p-5 flex flex-col justify-between">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <div>
-                    <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Parts Distribution & Revenue Trend</h3>
-                    <p class="text-[11px] text-slate-400 mt-0.5">Calculated tracking values across the last 6 months.</p>
-                </div>
-                <span class="text-[10px] font-mono text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">{{ $currentCompany->name ?? 'Workspace' }}</span>
-            </div>
-            <div class="h-64 relative">
-                <canvas id="revenueTrendChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Small Chart: Category Share breakdown (Takes 1 column) -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5 flex flex-col justify-between">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Inventory Share</h3>
-                <i class="fa-solid fa-pie-chart text-slate-300 text-xs"></i>
-            </div>
-            <div class="h-64 relative flex items-center justify-center">
-                <canvas id="inventoryShareChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- 📋 DATA RECORDS LISTING SECTION -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Table Layout (2 Columns Wide) -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-sm lg:col-span-2 overflow-hidden">
-            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Critical Material Supply Tracking</h3>
-                <span class="text-[10px] font-mono border border-slate-200 text-slate-500 bg-slate-50 px-2 py-0.5 rounded">Live Metrics</span>
-            </div>
+    <div class="grid grid-cols-1 gap-7 lg:grid-cols-3">
+        <section class="overflow-hidden border border-[#dfe5e1] bg-white lg:col-span-2">
+            <div class="flex items-center justify-between border-b border-[#e8ede9] px-5 py-4"><h2 class="text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">Critical material supply</h2><span class="text-[9px] text-[#8a978e]">Live metrics</span></div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-100">
-                            <th class="p-4">Material Part Description</th>
-                            <th class="p-4">SKU / Code</th>
-                            <th class="p-4 text-center">In-Stock Count</th>
-                            <th class="p-4 text-right">Urgency Matrix</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-600 font-medium">
-                                @forelse ($lowStockItems as $item)
-                                    <tr class="hover:bg-slate-50/50 transition-colors">
-                                        <td class="p-4 text-slate-900">{{ $item->description }}</td>
-                                        <td class="p-4 font-mono text-slate-400">{{ $item->sku }}</td>
-                                        <td class="p-4 text-center font-bold text-slate-900">{{ $item->stock_count }}</td>
-                                        <td class="p-4 text-right">
-                                            <span class="text-[10px] font-bold {{ $item->stock_count === 0 ? 'text-slate-500 bg-slate-100 border-slate-200' : 'text-amber-700 bg-amber-50 border-amber-200/60' }} px-2 py-0.5 rounded border">
-                                                {{ $item->stock_count === 0 ? 'Out of Stock' : 'Low Stock' }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="p-4 text-center text-slate-400">No low stock items for the current company.</td>
-                                    </tr>
-                                @endforelse
+                <table class="w-full text-left text-xs">
+                    <thead><tr class="border-b border-[#e8ede9] bg-[#fafcfb] text-[9px] font-bold uppercase tracking-[0.13em] text-[#92a097]"><th class="px-5 py-3">Material</th><th class="px-5 py-3">SKU / code</th><th class="px-5 py-3">In stock</th><th class="px-5 py-3 text-right">Status</th></tr></thead>
+                    <tbody class="divide-y divide-[#edf1ee]">
+                        @forelse ($lowStockItems as $item)
+                            <tr class="text-[#55645a] hover:bg-[#fbfdfb]"><td class="px-5 py-4 font-medium text-[#293b2e]">{{ $item->description }}</td><td class="px-5 py-4 font-mono text-[10px] text-[#94a199]">{{ $item->sku }}</td><td class="px-5 py-4 font-semibold text-[#293b2e]">{{ $item->stock_count }}</td><td class="px-5 py-4 text-right"><span class="border border-[#ead8c6] px-2 py-1 text-[9px] font-bold uppercase text-[#a56c35]">{{ $item->stock_count === 0 ? 'Out of stock' : 'Low stock' }}</span></td></tr>
+                        @empty
+                            <tr><td colspan="4" class="px-5 py-8 text-center text-xs text-[#9aa69d]">No low stock items for the current company.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- Right Operations Audit Feed (1 Column Wide) -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
-            <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider pb-2 border-b border-slate-100">System Audit Trail</h3>
-            <div class="space-y-4">
-                <div class="flex space-x-3 text-xs">
-                    <i class="fa-solid fa-building text-slate-400 mt-0.5"></i>
-                    <div>
-                        <p class="font-semibold text-slate-800">Current Company</p>
-                        <p class="text-slate-400 mt-0.5 font-mono text-[10px]">{{ $currentCompany->name ?? 'No company selected' }}</p>
-                    </div>
-                </div>
-                <div class="flex space-x-3 text-xs">
-                    <i class="fa-solid fa-triangle-exclamation text-slate-400 mt-0.5"></i>
-                    <div>
-                        <p class="font-semibold text-slate-800">Low Stock Alerts</p>
-                        <p class="text-slate-400 mt-0.5 font-mono text-[10px]">{{ $lowStockCount }} items need review for this company.</p>
-                    </div>
-                </div>
+        </section>
+        <section class="border border-[#dfe5e1] bg-white p-5">
+            <h2 class="border-b border-[#e8ede9] pb-4 text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">System activity</h2>
+            <div class="divide-y divide-[#edf1ee]">
+                <div class="flex gap-3 py-4 text-xs"><i class="fa-regular fa-building mt-0.5 text-[#86a58c]"></i><div><p class="font-semibold text-[#35493a]">Current company</p><p class="mt-1 text-[10px] text-[#8d9a91]">{{ $currentCompany->name ?? 'No company selected' }}</p></div></div>
+                <div class="flex gap-3 py-4 text-xs"><i class="fa-solid fa-triangle-exclamation mt-0.5 text-[#c58b50]"></i><div><p class="font-semibold text-[#35493a]">Low stock alerts</p><p class="mt-1 text-[10px] text-[#8d9a91]">{{ $lowStockCount }} items need review.</p></div></div>
                 @forelse ($recentSales as $sale)
-                    <div class="flex space-x-3 text-xs">
-                        <i class="fa-solid fa-receipt text-slate-400 mt-0.5"></i>
-                        <div>
-                            <p class="font-semibold text-slate-800">{{ $sale->invoice_number }}</p>
-                            <p class="text-slate-400 mt-0.5 font-mono text-[10px]">{{ $sale->customer->company_name ?? 'Customer' }} · TZS {{ number_format($sale->total_amount, 2) }}</p>
-                        </div>
-                    </div>
+                    <div class="flex gap-3 py-4 text-xs"><i class="fa-regular fa-file-lines mt-0.5 text-[#86a58c]"></i><div><p class="font-semibold text-[#35493a]">{{ $sale->invoice_number }}</p><p class="mt-1 text-[10px] text-[#8d9a91]">TZS {{ number_format($sale->total_amount, 2) }}</p></div></div>
                 @empty
-                    <div class="flex space-x-3 text-xs">
-                        <i class="fa-solid fa-receipt text-slate-400 mt-0.5"></i>
-                        <div>
-                            <p class="font-semibold text-slate-800">No Recent Sales</p>
-                            <p class="text-slate-400 mt-0.5 font-mono text-[10px]">This company has no sales recorded yet.</p>
-                        </div>
-                    </div>
+                    <div class="flex gap-3 py-4 text-xs"><i class="fa-regular fa-file-lines mt-0.5 text-[#86a58c]"></i><div><p class="font-semibold text-[#35493a]">No recent sales</p><p class="mt-1 text-[10px] text-[#8d9a91]">No sales recorded yet.</p></div></div>
                 @endforelse
             </div>
-        </div>
+        </section>
     </div>
 
-    <!-- 📦 VENDOR SCRIPTS (Loaded cleanly at the page bottom) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Line Chart Config (Revenue / Orders Trend)
-        const ctxLine = document.getElementById('revenueTrendChart').getContext('2d');
-        new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                    labels: @json($revenueTrendLabels),
-                datasets: [{
-                    label: 'Orders Value ($)',
-                        data: @json($revenueTrendValues),
-                    borderColor: '#475569', // Minimal slate grey trendline
-                    borderWidth: 2,
-                    backgroundColor: 'rgba(71, 85, 105, 0.02)',
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#475569'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10, family: 'monospace' }, color: '#94a3b8' } },
-                    x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#94a3b8' } }
-                }
-            }
-        });
-
-        // Doughnut Chart Config (Inventory Categories Split)
-        const ctxPie = document.getElementById('inventoryShareChart').getContext('2d');
-        new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                    labels: @json($inventoryShareLabels),
-                datasets: [{
-                    data: @json($inventoryShareValues),
-                    backgroundColor: [
-                        '#334155', // Dark slate accent
-                        '#64748b', // Medium slate body
-                        '#cbd5e1'  // Light border slate
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 10, font: { size: 10, weight: '500' }, color: '#64748b' }
-                    }
-                },
-                cutout: '78%'
-            }
-        });
+        const chartFont = { family: 'Instrument Sans', size: 10 };
+        new Chart(document.getElementById('revenueTrendChart'), { type: 'line', data: { labels: @json($revenueTrendLabels), datasets: [{ data: @json($revenueTrendValues), borderColor: '#315c3b', borderWidth: 1.5, pointRadius: 2, pointBackgroundColor: '#315c3b', tension: .25, fill: false }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { font: chartFont, color: '#94a199' } }, y: { grid: { color: '#edf1ee' }, ticks: { font: chartFont, color: '#94a199' } } } } });
+        new Chart(document.getElementById('inventoryShareChart'), { type: 'doughnut', data: { labels: @json($inventoryShareLabels), datasets: [{ data: @json($inventoryShareValues), backgroundColor: ['#315c3b', '#86a58c', '#b8cdbb', '#dce8dd'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '76%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 7, boxHeight: 7, padding: 14, font: chartFont, color: '#718078' } } } } });
     </script>
+</div>

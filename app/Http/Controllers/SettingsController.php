@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\InventoryCategory;
+use App\Models\InventoryUnit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -28,6 +30,14 @@ class SettingsController extends Controller
         return view('settings', [
             'company' => $company,
             'settings' => $this->settingsForCompany($company),
+            'inventoryCategories' => InventoryCategory::where('company_id', $company->id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
+            'inventoryUnits' => InventoryUnit::where('company_id', $company->id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 

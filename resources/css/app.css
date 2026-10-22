@@ -7,3 +7,38 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer base {
+    body {
+        letter-spacing: -0.01em;
+    }
+
+    button, a, input, select, textarea {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    ::selection {
+        background: #c9f7d4;
+        color: #173b26;
+    }
+}
+
+@layer utilities {
+    .shadow-xs {
+        box-shadow: 0 2px 8px rgba(31, 66, 44, 0.04);
+    }
+
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: #d8e5db transparent;
+    }
+}
+
+/* Keep the workspace intentionally flat: structure comes from borders and spacing. */
+[class*="rounded-"] {
+    border-radius: 0 !important;
+}
+
+[class*="shadow"] {
+    box-shadow: none !important;
+}

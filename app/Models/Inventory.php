@@ -21,6 +21,13 @@ class Inventory extends Model
         'selling_price',
         'stock_count',
         'safety_threshold',
+        'reorder_point',
+        'reorder_quantity',
+        'cost_method',
+        'track_batches',
+        'track_serials',
+        'track_expiry',
+        'tax_rate',
         'is_active',
     ];
 
@@ -50,6 +57,16 @@ class Inventory extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(InventoryReservation::class);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(InventoryBatch::class);
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(InventoryAuditLog::class);
     }
 
     public function categoryRelation()

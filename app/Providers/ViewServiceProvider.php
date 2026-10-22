@@ -5,8 +5,6 @@ namespace App\Providers;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Expense;
-use App\Models\InsuranceClaim;
-use App\Models\InsurancePolicy;
 use App\Models\Inventory;
 use App\Models\InventoryCategory;
 use App\Models\InventoryUnit;
@@ -110,6 +108,11 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('inventory', $inventory);
             $view->with('inventoryCategories', InventoryCategory::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get());
             $view->with('inventoryUnits', InventoryUnit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get());
+            $view->with('inventoryCustomers', Customer::where('company_id', $companyId)->orderBy('company_name')->get());
+            $view->with('inventorySuppliers', \App\Models\Supplier::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get());
+            $view->with('inventoryLocations', \App\Models\WarehouseLocation::with('warehouse')
+                ->whereIn('warehouse_id', Warehouse::where('company_id', $companyId)->select('id'))
+                ->where('is_active', true)->orderBy('code')->get());
             $warehouses = Warehouse::with('locations')
                 ->where('company_id', $companyId)
                 ->where('is_active', true)
@@ -193,59 +196,6 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('recentSales', $recentSales);
         });
 
-        View::composer('components.insurance', function ($view) {
-            $companyId = session('company_id');
-            $isAdmin = Auth::check() && Auth::user()->role_id == 1;
-
-            $customers = Customer::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->orderBy('company_name')->get();
-
-            $policyOptions = InsurancePolicy::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->orderBy('policy_number')->get();
-
-            $policies = InsurancePolicy::with('customer')
-                ->when($companyId, function ($query) use ($companyId) {
-                    $query->where('company_id', $companyId);
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-
-            $claims = InsuranceClaim::with('insurancePolicy.customer')
-                ->when($companyId, function ($query) use ($companyId) {
-                    $query->where('company_id', $companyId);
-                })
-                ->orderBy('created_at', 'desc')
-                ->paginate(10, ['*'], 'claims_page');
-
-            $activePolicies = InsurancePolicy::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->where('status', 'active')->count();
-
-            $inactivePolicies = InsurancePolicy::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->whereIn('status', ['inactive', 'expired', 'cancelled', 'lapsed'])->count();
-
-            $totalCoverage = InsurancePolicy::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->sum('coverage_amount');
-
-            $openClaims = InsuranceClaim::when($companyId, function ($query) use ($companyId) {
-                $query->where('company_id', $companyId);
-            })->whereIn('status', ['pending', 'reviewing'])->count();
-
-            $view->with('customers', $customers);
-            $view->with('policyOptions', $policyOptions);
-            $view->with('policies', $policies);
-            $view->with('claims', $claims);
-            $view->with('activePolicies', $activePolicies);
-            $view->with('inactivePolicies', $inactivePolicies);
-            $view->with('totalCoverage', $totalCoverage);
-            $view->with('openClaims', $openClaims);
-            $view->with('isAdmin', $isAdmin);
-        });
-
         View::composer('components.staff', function ($view) {
             /** @var User|null $user */
             $user = Auth::user();
@@ -294,20 +244,6 @@ class ViewServiceProvider extends ServiceProvider
                 return ($item->unit_price ?? 0) * ($item->stock_count ?? 0);
             });
 
-            $insurancePolicies = InsurancePolicy::with('customer')
-                ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
-                    $query->where('company_id', $selectedCompanyId);
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            $insuranceClaims = InsuranceClaim::with('insurancePolicy.customer')
-                ->when($selectedCompanyId, function ($query) use ($selectedCompanyId) {
-                    $query->where('company_id', $selectedCompanyId);
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
-
             $statementRows = match ($selectedStatementClass) {
                 'expense_outlays' => $companyExpenses->map(function ($expense) {
                     return (object) [
@@ -325,14 +261,6 @@ class ViewServiceProvider extends ServiceProvider
                         'output' => 'TZS '.number_format(($item->unit_price ?? 0) * ($item->stock_count ?? 0), 2),
                     ];
                 }),
-                'insurance_summary' => $insurancePolicies->map(function ($policy) {
-                    return (object) [
-                        'pointer' => $policy->policy_number,
-                        'compiled_by' => $policy->customer->company_name ?? 'Policy Holder',
-                        'scope' => $policy->policy_type.' · '.$policy->status,
-                        'output' => 'TZS '.number_format($policy->premium_amount, 2),
-                    ];
-                }),
                 default => $companySales->map(function ($sale) {
                     return (object) [
                         'pointer' => $sale->invoice_number,
@@ -346,7 +274,6 @@ class ViewServiceProvider extends ServiceProvider
             $statementClassLabel = match ($selectedStatementClass) {
                 'expense_outlays' => 'Factory Overheads & Expenses',
                 'inventory_valuation' => 'Stock Item Valuation Ledger',
-                'insurance_summary' => 'Insurance Policy & Claims Summary',
                 default => 'Sales Orders Ledger Summary',
             };
 
@@ -359,8 +286,6 @@ class ViewServiceProvider extends ServiceProvider
             $view->with('companySales', $companySales);
             $view->with('companyExpenses', $companyExpenses);
             $view->with('companyInventory', $companyInventory);
-            $view->with('insurancePolicies', $insurancePolicies);
-            $view->with('insuranceClaims', $insuranceClaims);
             $view->with('statementRows', $statementRows);
             $view->with('salesTotal', $salesTotal);
             $view->with('expensesTotal', $expensesTotal);

@@ -7,9 +7,9 @@
     <script src="https://kit.fontawesome.com/ef44533d17.js" crossorigin="anonymous"></script>
 	@vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+<body class="min-h-screen bg-[#f6f8f7] text-slate-900 antialiased">
 	<main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
-		<section class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8  sm:p-10">
+		<section class="w-full max-w-md border border-[#dfe6e0] bg-white p-8 sm:p-10">
 			<div class="mb-8 text-center">
 				<h1 class="text-2xl font-semibold tracking-tight text-slate-900">Create account</h1>
 				<p class="mt-2 text-sm text-slate-500">Start your free account.</p>
@@ -19,6 +19,17 @@
 				@csrf
 
 				<div class="space-y-2">
+					<label for="company_name" class="block text-sm font-medium text-slate-700">Business name</label>
+					<input
+						id="company_name"
+						name="company_name"
+						type="text"
+						required
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
+						placeholder="Your business name"
+					>
+				</div>
+				<div class="space-y-2">
 					<label for="name" class="block text-sm font-medium text-slate-700">First name</label>
 					<input
 						id="name"
@@ -26,7 +37,7 @@
 						type="text"
 						autocomplete="name"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Your first name"
 					>
 				</div>
@@ -38,7 +49,7 @@
 						type="text"
 						autocomplete="name"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Your last name"
 					>
 				</div>
@@ -51,7 +62,7 @@
 						type="email"
 						autocomplete="email"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="you@example.com"
 					>
 				</div>
@@ -64,7 +75,7 @@
 						type="tel"
 						autocomplete="tel"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="your phone number"
 					>
 				</div>
@@ -78,7 +89,7 @@
 						type="password"
 						autocomplete="new-password"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Create a password"
 					>
 					<button type="button" class="absolute inset-y-0 right-3 flex items-center text-slate-500 transition hover:text-slate-700" aria-label="Show password">
@@ -97,7 +108,7 @@
 						type="password"
 						autocomplete="new-password"
 						required
-						class="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#186682] focus:ring-2 focus:ring-[#186682]/20"
+						class="w-full border border-[#d7e1d9] bg-[#fbfcfb] px-3 py-2.5 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#638a6d] focus:bg-white focus:ring-2 focus:ring-[#cfe6d3]/50"
 						placeholder="Create a password"
 					>
 					<button type="button" class="absolute inset-y-0 right-3 flex items-center text-slate-500 transition hover:text-slate-700" aria-label="Show password">
@@ -111,14 +122,14 @@
 
 				<button
 					type="submit"
-					class="w-full rounded-md bg-[#025c78] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#12b1df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#186682]/30"
+					class="w-full bg-[#173b26] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#285b38] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9bcfa3]/40"
 				>
 					Create account
 				</button>
 
 				<p class="text-center text-sm text-slate-500">
 					Already have an account?
-					<a href="/signin" class="font-medium text-[#186682] hover:underline">Sign in</a>
+					<a href="/signin" class="font-medium text-[#638a6d] hover:text-[#173b26] hover:underline">Sign in</a>
 				</p>
 			</form>
 		</section>

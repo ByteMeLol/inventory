@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Inventory;
+use App\Models\InventoryAuditLog;
+use App\Models\InventoryStocktake;
+use App\Services\InventoryOperationsService;
 use App\Models\InventoryReservation;
 use App\Models\Warehouse;
 use App\Models\WarehouseLocation;
@@ -10,6 +13,10 @@ use App\Services\InventoryStockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Picqer\Barcode\BarcodeGeneratorSVG;
+use Picqer\Barcode\BarcodeGenerator;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\SvgWriter;
 
 class InventoryController extends Controller
 {
@@ -21,9 +28,11 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
+        $companyId = session('company_id') ?: Auth::user()?->company_id;
+        abort_unless($companyId, 403, 'No active company scope found for inventory creation.');
+
         $validatedData = $request->validate([
-            'sku' => 'required|unique:inventory,sku',
+            'sku' => ['required', 'string', 'max:100', Rule::unique('inventory')->where(fn ($q) => $q->where('company_id', $companyId))],
             'description' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'category_id' => ['nullable', Rule::exists('inventory_categories', 'id')->where(fn ($q) => $q->where('company_id', $companyId))],
@@ -34,14 +43,15 @@ class InventoryController extends Controller
             'selling_price' => 'nullable|numeric|min:0',
             'stock_count' => 'required|integer|min:0',
             'safety_threshold' => 'required|integer|min:0',
-
+            'reorder_point' => 'nullable|numeric|min:0',
+            'reorder_quantity' => 'nullable|numeric|min:0',
+            'cost_method' => ['nullable', Rule::in(['fifo', 'weighted_average'])],
+            'track_batches' => 'sometimes|boolean',
+            'track_serials' => 'sometimes|boolean',
+            'track_expiry' => 'sometimes|boolean',
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
         ]);
-
-        $companyId = session('company_id') ?: Auth::user()?->company_id;
-
-        abort_unless($companyId, 403, 'No active company scope found for inventory creation.');
-
-        Inventory::create([
+        $inventory = Inventory::create([
             'company_id' => $companyId,
             'sku' => $validatedData['sku'],
             'description' => $validatedData['description'],
@@ -54,9 +64,121 @@ class InventoryController extends Controller
             'selling_price' => $validatedData['selling_price'] ?? $validatedData['unit_price'],
             'stock_count' => $validatedData['stock_count'],
             'safety_threshold' => $validatedData['safety_threshold'],
+            'reorder_point' => $validatedData['reorder_point'] ?? $validatedData['safety_threshold'],
+            'reorder_quantity' => $validatedData['reorder_quantity'] ?? 0,
+            'cost_method' => $validatedData['cost_method'] ?? 'weighted_average',
+            'track_batches' => $request->boolean('track_batches'),
+            'track_serials' => $request->boolean('track_serials'),
+            'track_expiry' => $request->boolean('track_expiry'),
+            'tax_rate' => $validatedData['tax_rate'] ?? 0,
+        ]);
+        InventoryAuditLog::create([
+            'company_id' => $companyId,
+            'inventory_id' => $inventory->id,
+            'user_id' => $request->user()?->id,
+            'action' => 'product.created',
+            'after_state' => $inventory->only(['sku', 'barcode', 'description', 'category_id', 'unit_id']),
         ]);
 
         return redirect()->route('inventory.view')->with('success', 'Inventory item added successfully!');
+    }
+
+    public function lookup(Request $request)
+    {
+        $companyId = $this->companyId();
+        $data = $request->validate(['code' => ['required', 'string', 'max:150']]);
+        $item = Inventory::where('company_id', $companyId)
+            ->where(fn ($query) => $query->where('barcode', $data['code'])->orWhere('sku', $data['code']))
+            ->with('stockBalances.location.warehouse')
+            ->firstOrFail();
+
+        return response()->json($item);
+    }
+
+    public function barcode(Inventory $inventory)
+    {
+        abort_unless($inventory->company_id === $this->companyId(), 403);
+        $generator = new BarcodeGeneratorSVG();
+
+        return response($generator->getBarcode($inventory->barcode ?: $inventory->sku, BarcodeGenerator::TYPE_CODE_128, 2, 60))
+            ->header('Content-Type', 'image/svg+xml');
+    }
+
+    public function qrCode(Inventory $inventory)
+    {
+        abort_unless($inventory->company_id === $this->companyId(), 403);
+        $result = (new Builder(
+            writer: new SvgWriter(),
+            data: route('inventory.lookup', ['code' => $inventory->barcode ?: $inventory->sku]),
+            size: 300,
+            margin: 10,
+        ))->build();
+
+        return response($result->getString())->header('Content-Type', 'image/svg+xml');
+    }
+
+    public function alerts(InventoryOperationsService $operations)
+    {
+        return response()->json($operations->alerts($this->companyId()));
+    }
+
+    public function valuation(InventoryOperationsService $operations)
+    {
+        return response()->json($operations->valuation($this->companyId()));
+    }
+
+    public function returnStock(Request $request, InventoryOperationsService $operations)
+    {
+        $companyId = $this->companyId();
+        $data = $request->validate([
+            'direction' => ['required', Rule::in(['customer', 'supplier'])],
+            'inventory_id' => ['required', Rule::exists('inventory', 'id')->where(fn ($q) => $q->where('company_id', $companyId))],
+            'warehouse_location_id' => ['required', Rule::exists('warehouse_locations', 'id')->where(fn ($q) => $q->whereIn('warehouse_id', \App\Models\Warehouse::where('company_id', $companyId)->select('id')))],
+            'reference_number' => ['required', 'string', 'max:100'],
+            'quantity' => ['required', 'numeric', 'gt:0'],
+            'unit_cost' => ['required', 'numeric', 'gte:0'],
+            'customer_id' => ['nullable', Rule::exists('customers', 'id')->where(fn ($q) => $q->where('company_id', $companyId))],
+            'supplier_id' => ['nullable', Rule::exists('suppliers', 'id')->where(fn ($q) => $q->where('company_id', $companyId))],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+        $return = $operations->createReturn($companyId, $data, $request->user());
+
+        return back()->with('success', ucfirst($data['direction']).' return recorded.');
+    }
+
+    public function startStocktake(Request $request, InventoryOperationsService $operations)
+    {
+        $companyId = $this->companyId();
+        $data = $request->validate([
+            'warehouse_location_id' => ['required', Rule::exists('warehouse_locations', 'id')->where(fn ($q) => $q->whereIn('warehouse_id', \App\Models\Warehouse::where('company_id', $companyId)->select('id')))],
+            'reference_number' => ['required', 'string', 'max:100'],
+        ]);
+        $stocktake = $operations->startStocktake($companyId, $data, $request->user());
+
+        return response()->json($stocktake->load('lines'), 201);
+    }
+
+    public function reconcileStocktake(Request $request, InventoryStocktake $stocktake, InventoryOperationsService $operations)
+    {
+        abort_unless($stocktake->company_id === $this->companyId(), 403);
+        $data = $request->validate([
+            'counts' => ['required', 'array', 'min:1'],
+            'counts.*.inventory_id' => ['required', 'integer'],
+            'counts.*.counted_quantity' => ['required', 'numeric', 'min:0'],
+            'counts.*.reason' => ['nullable', 'string', 'max:255'],
+        ]);
+        $updated = $operations->reconcileStocktake($stocktake, $data['counts'], $request->user());
+
+        return response()->json($updated->load('lines'));
+    }
+
+    public function approveStocktake(Request $request, InventoryStocktake $stocktake, InventoryOperationsService $operations)
+    {
+        abort_unless($stocktake->company_id === $this->companyId(), 403);
+        abort_unless($request->user()->canManageUsers(), 403, 'Only an authorized manager can approve stocktakes.');
+        $updated = $operations->approveStocktake($stocktake->load('lines'), $request->user());
+
+        return response()->json($updated);
     }
 
     public function storeWarehouse(Request $request)

@@ -1,52 +1,132 @@
-<div class="max-w-5xl mx-auto px-4 py-8" 
-     x-data="{ showModal: false }" 
+<div class="inventory-page mx-auto w-full max-w-[1380px] px-1 py-2 sm:px-2 lg:px-3"
+     x-data="inventoryOperations()"
+     x-init="loadOperations()"
      @open-modal.window="if ($event.detail === 'add-item') showModal = true"
      @close-modal.window="showModal = false">
             
-    <div class="mb-8 pb-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="mb-8 flex flex-col gap-6 border-b border-[#d8e2da] pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <h1 class="text-lg font-bold tracking-tight text-gray-900">SKU Stock Inventory</h1>
-            <p class="text-xs text-gray-500 mt-0.5">Manage mechanical component assets, assign classifications, and track safety allocation lines.</p>
+            <div class="flex items-center gap-2">
+                <span class="flex h-12 w-12 items-center justify-center border border-[#c4d8c8] bg-[#e7f2e9] text-[#1d6535]"><i class="fa-solid fa-cubes-stacked"></i></span>
+                <div>
+                    <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#6f8976]">Stock workspace</p>
+                    <h1 class="text-3xl font-semibold tracking-[-0.04em] text-[#17231b]">Inventory overview</h1>
+                    <p class="mt-2 text-sm text-[#718077]">Catalog, stock health, traceability, and warehouse operations in one view.</p>
+                </div>
+            </div>
         </div>
         <div class="flex items-center space-x-2">
-            <button @click="$dispatch('open-modal', 'add-item')" class="bg-[#025c78] hover:bg-[#014d64] text-white text-xs font-semibold py-1.5 px-4 rounded-lg transition shadow-xs flex items-center space-x-2">
+            <button @click="$dispatch('open-modal', 'add-item')" class="flex items-center gap-2 bg-[#173b26] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#285b38]">
                 <i class="fa-solid fa-plus text-[11px]"></i>
                 <span>Register New SKU</span>
             </button>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs flex items-center justify-between">
+    <div class="mb-8 grid grid-cols-1 gap-0 border-y border-l border-[#dfe6e0] bg-white sm:grid-cols-3">
+        <div class="flex items-center justify-between border-r border-b border-[#dfe6e0] p-6 sm:border-b-0">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Catalog items</span>
-                <span class="text-xl font-bold text-gray-900 tracking-tight">{{$inventory->count()}} SKUs</span>
+                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#849389]">Total catalog items</span>
+                <span class="mt-2 block text-3xl font-semibold tracking-tight text-[#1b3525]">{{$inventory->count()}} <small class="text-sm font-normal text-[#93a098]">SKUs</small></span>
             </div>
-            <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 text-xs">
+            <div class="flex h-10 w-10 items-center justify-center border border-[#dce9de] bg-[#f5faf5] text-[#6eb27d]">
                 <i class="fa-solid fa-boxes-stacked"></i>
             </div>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs flex items-center justify-between">
+        <div class="flex items-center justify-between border-r border-b border-[#eadfce] bg-[#fffdf9] p-6 sm:border-b-0">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Critical Low Stock</span>
-                <span id='low_stock' class="text-xl font-bold text-amber-600 tracking-tight">{{ $lowStockCount }} Lines</span>
+                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#9b866c]">Critical low stock</span>
+                <span id='low_stock' class="mt-2 block text-3xl font-semibold tracking-tight text-[#a9682e]">{{ $lowStockCount }} <small class="text-sm font-normal text-[#c69d70]">lines</small></span>
             </div>
-            <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 text-xs">
+            <div class="flex h-10 w-10 items-center justify-center border border-[#f0dfc9] bg-[#fff8ed] text-[#c77e39]">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs flex items-center justify-between">
+        <div class="flex items-center justify-between border-r border-[#dfe6e0] p-6">
             <div>
-                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Total Capital Valuation</span>
-                <span class="text-xl font-bold text-gray-900 tracking-tight">TZS 0.00</span>
+                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#849389]">Total capital valuation</span>
+                <span class="mt-2 block text-3xl font-semibold tracking-tight text-[#1b3525]" x-text="formatMoney(totalValue)">TZS 0.00</span>
             </div>
-            <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 text-xs">
+            <div class="flex h-10 w-10 items-center justify-center border border-[#dce9de] bg-[#f5faf5] text-[#6eb27d]">
                 <i class="fa-solid fa-scale-balanced"></i>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs mb-6">
+    <div class="hidden">
+    <div class="mb-7 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <section class="border border-[#e6d7c2] bg-[#fffdf9] p-6 lg:col-span-2">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#6c4d2c]">Action centre</h2>
+                    <p class="mt-1 text-xs text-[#9a7b59]">Reorder and expiry signals for this company.</p>
+                </div>
+                <button type="button" @click="loadOperations()" class="border border-[#dfc8a9] bg-white px-3 py-2 text-xs font-semibold text-[#8b633c] hover:bg-[#fff7eb]">Refresh</button>
+            </div>
+            <div class="mt-3 space-y-2">
+                <template x-for="alert in alerts" :key="alert.id">
+                    <div class="flex items-center justify-between border border-[#eadcc9] bg-white px-4 py-3 text-xs">
+                        <span class="font-medium text-slate-700" x-text="alert.message"></span>
+                        <span class="border border-[#ead5b9] bg-[#fff8ed] px-2 py-1 text-[10px] font-bold uppercase text-[#9a6c38]" x-text="alert.type"></span>
+                    </div>
+                </template>
+                <p x-show="!alerts.length" class="border border-dashed border-[#dfc8a9] bg-white/60 p-4 text-xs text-[#9a7b59]">No open inventory alerts.</p>
+            </div>
+        </section>
+        <section class="border border-[#dfe6e0] bg-white p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Inventory value</h2>
+                    <p class="mt-1 text-xs text-[#8a978e]">Weighted average or FIFO.</p>
+                </div>
+                <i class="fa-solid fa-chart-line text-slate-300"></i>
+            </div>
+            <p class="mt-6 text-3xl font-semibold text-[#1b2b20]" x-text="formatMoney(totalValue)">TZS 0.00</p>
+            <p class="mt-2 text-xs text-[#8a978e]" x-text="valuation.length + ' products valued'"></p>
+        </section>
+    </div>
+
+    <div class="mb-7 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <section class="border border-[#dfe6e0] bg-white p-6 lg:col-span-2">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Barcode scanner</h2>
+                    <p class="mt-1 text-xs text-[#8a978e]">Scan a SKU or barcode to open live stock balances.</p>
+                </div>
+                <button type="button" @click="startScanner()" class="bg-[#173b26] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#285b38]">
+                    <i class="fa-solid fa-camera mr-1"></i> Open camera
+                </button>
+            </div>
+            <form class="mt-5 flex gap-2" @submit.prevent="lookupCode()">
+                <input x-model="scanCode" required placeholder="Enter or scan code" class="min-w-0 flex-1 border border-[#dfe6e0] bg-[#fbfcfb] px-4 py-3 text-sm font-mono outline-none focus:border-[#8db59a]">
+                <button class="bg-[#263b2c] px-5 py-3 text-xs font-semibold text-white">Lookup</button>
+            </form>
+            <div x-show="scanResult" class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[11px]" style="display:none">
+                <p class="font-bold text-emerald-900" x-text="scanResult?.description"></p>
+                <p class="mt-1 text-emerald-800">SKU <span class="font-mono" x-text="scanResult?.sku"></span> · <span x-text="scanResult?.stock_balances?.length || 0"></span> locations</p>
+            </div>
+            <p x-show="scanError" class="mt-3 rounded-lg bg-red-50 p-3 text-[11px] text-red-700" x-text="scanError" style="display:none"></p>
+        </section>
+        <section class="border border-[#dfe6e0] bg-white p-6">
+            <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Operations</h2>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+                <button type="button" @click="showReturn = true" class="rounded-lg border border-slate-200 p-3 text-left text-[10px] font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-rotate-left mb-1 block text-slate-400"></i>Record return</button>
+                <button type="button" @click="showStocktake = true" class="rounded-lg border border-slate-200 p-3 text-left text-[10px] font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-clipboard-check mb-1 block text-slate-400"></i>Start stocktake</button>
+            </div>
+        </section>
+    </div>
+
+    </div>
+
+    <div class="mb-5 flex items-center justify-between border-b border-[#dfe6e0] pb-4">
+        <div>
+            <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">SKU catalog</h2>
+            <p class="mt-1 text-xs text-[#8a978e]">Manage products, pricing, and available stock.</p>
+        </div>
+        <span class="text-xs text-[#8a978e]">{{ $inventory->total() }} records</span>
+    </div>
+
+    <div class="mb-6 border border-[#dfe6e0] bg-white p-4">
         <form method="GET" action="/inventory" class="flex flex-col md:flex-row items-center gap-3">
             <div class="relative w-full md:flex-1">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 text-xs">
@@ -57,8 +137,9 @@
             <div class="w-full md:w-48">
                 <select name="category" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg py-1.5 px-2.5 text-xs text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
                     <option value="">All Categories</option>
-                    <option value="water">water</option>
-                    <option value="containers">Containers</option>
+                    @foreach ($inventoryCategories as $category)
+                        <option value="{{ $category->name }}" @selected(request('category') === $category->name)>{{ $category->name }}</option>
+                    @endforeach
                 </select>
             </div>
             <button type="submit" class="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs py-1.5 px-4 rounded-lg transition shadow-xs">
@@ -67,6 +148,7 @@
         </form>
     </div>
 
+    <div class="hidden">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
             <div class="flex items-center justify-between mb-3">
@@ -109,7 +191,7 @@
         <div class="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-2">
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
                 <div class="mb-3 flex items-center justify-between">
-                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Product categories</h2><p class="mt-1 text-[10px] text-gray-400">Classification groups used by goods.</p></div>
+                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Product categories</h2><p class="mt-1 text-[10px] text-gray-400">Categories available to SKU records.</p></div>
                     <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">{{ $inventoryCategories->count() }}</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -151,14 +233,17 @@
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    </div>
+
+    <div class="border border-[#dfe6e0] bg-white overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-200/80 text-[10px]">
                         <th class="p-4 w-32">SKU Code</th>
                         <th class="p-4">Material Part Description</th>
-                        <th class="p-4">Classification Group</th>
+                        <th class="p-4">Category</th>
+                        <th class="p-4">Unit</th>
                         <th class="p-4 text-right">Unit Price</th>
                         <th class="p-4 text-center w-32">Available Stock</th>
                         <th class="p-4 text-center w-32">Safety Minimum</th>
@@ -166,13 +251,12 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-gray-600 font-medium">
-                    @foreach ($inventory as $item)
+                    @forelse ($inventory as $item)
                         <tr class="hover:bg-gray-50/40 transition-colors">
                         <td class="p-4 font-mono font-bold text-gray-900">{{ $item->sku }}</td>
                         <td class="p-4 text-gray-900 font-semibold">{{ $item->description }}</td>
-                        <td class="p-4">
-                            <span class="px-2 py-0.5 border border-gray-200 bg-gray-50 text-gray-600 rounded text-[10px]">{{ $item->category }}</span>
-                        </td>
+                        <td class="p-4 text-[#66766b]">{{ $item->category }}</td>
+                        <td class="p-4 text-[#66766b]">{{ $item->unit?->symbol ?? '—' }}</td>
                         <td class="p-4 text-right font-mono text-gray-700">TZS {{ number_format($item->unit_price ?? 0, 2) }}</td>
                         <td class="p-4 text-center font-bold text-red-600 bg-red-50/30">{{ $item->stock_count }}</td>
                         <td class="p-4 text-center font-mono text-gray-400">{{ $item->safety_threshold }}</td>
@@ -187,9 +271,11 @@
                             </span>
                         </td>
                     </tr>
-                    @endforeach
-                    
-                     
+                    @empty
+                        <tr>
+                            <td colspan="8" class="p-10 text-center text-xs text-[#8a978e]">No SKU records found for the current company.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -236,6 +322,11 @@
                 </div>
 
                 <div>
+                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Barcode</label>
+                    <input type="text" name="barcode" placeholder="Optional EAN or Code 128 value" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                </div>
+
+                <div>
                     <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Unit Price</label>
                     <input type="number" step="0.01" name="unit_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
                 </div>
@@ -250,6 +341,17 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Reorder point</label><input type="number" step="0.000001" name="reorder_point" value="5" min="0" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 font-mono text-gray-800"></div>
+                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Reorder quantity</label><input type="number" step="0.000001" name="reorder_quantity" min="0" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 font-mono text-gray-800"></div>
+                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Cost method</label><select name="cost_method" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 text-gray-800"><option value="weighted_average">Weighted average</option><option value="fifo">FIFO</option></select></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-[10px] text-slate-600">
+                    <label class="flex items-center gap-2"><input type="checkbox" name="track_batches" value="1" class="rounded"> Track batches</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" name="track_serials" value="1" class="rounded"> Track serials</label>
+                    <label class="flex items-center gap-2"><input type="checkbox" name="track_expiry" value="1" class="rounded"> Track expiry</label>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Initial Stock Count</label>
@@ -258,10 +360,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Category</label>
-                            <select name="category_id" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
-                                <option value="">Legacy category text</option>
+                            <select name="category" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
+                                <option value="">Select category</option>
                                 @foreach ($inventoryCategories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }} ({{ $category->code }})</option>
+                                    <option value="{{ $category->name }}">{{ $category->name }} ({{ $category->code }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -281,14 +383,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Classification Group</label>
-                    <select name="category" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
-                        <option value="water">water</option>
-                        <option value="containers">Containers</option>
-                    </select>
-                </div>
-
                 <div class="pt-4 border-t border-gray-100 flex items-center justify-end space-x-2 mt-2">
                     <button type="button" @click="showModal = false" class="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-50 transition shadow-xs">
                         Cancel
@@ -302,8 +396,119 @@
     </div>
 
 </div>
+<div x-show="showReturn || showStocktake || scannerOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" style="display:none">
+    <div @click.outside="closeOverlays()" class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl">
+        <template x-if="scannerOpen">
+            <div>
+                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Camera scanner</h3><button @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+                <video x-ref="scannerVideo" autoplay playsinline class="mt-4 aspect-video w-full rounded-xl bg-slate-900 object-cover"></video>
+                <p class="mt-3 text-xs text-slate-500">Point the camera at a barcode. Scans are queued locally if the device is offline.</p>
+            </div>
+        </template>
+        <template x-if="showReturn">
+            <form method="POST" action="{{ route('inventory.returns.store') }}" class="space-y-3">
+                @csrf
+                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Record inventory return</h3><button type="button" @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+                <select name="direction" required class="w-full rounded-lg border border-slate-200 p-2 text-xs"><option value="customer">Customer return</option><option value="supplier">Supplier return</option></select>
+                <div class="grid grid-cols-2 gap-2"><select name="inventory_id" required class="rounded-lg border border-slate-200 p-2 text-xs"><option value="">Product</option>@foreach($inventory as $item)<option value="{{ $item->id }}">{{ $item->sku }} · {{ $item->description }}</option>@endforeach</select><select name="warehouse_location_id" required class="rounded-lg border border-slate-200 p-2 text-xs"><option value="">Location</option>@foreach($inventoryLocations as $location)<option value="{{ $location->id }}">{{ $location->warehouse->code }} / {{ $location->code }}</option>@endforeach</select></div>
+                <div class="grid grid-cols-2 gap-2"><input name="reference_number" required placeholder="Return reference" class="rounded-lg border border-slate-200 p-2 text-xs"><input name="quantity" required type="number" step="0.000001" min="0.000001" placeholder="Quantity" class="rounded-lg border border-slate-200 p-2 text-xs"></div>
+                <div class="grid grid-cols-2 gap-2"><input name="unit_cost" required type="number" step="0.01" min="0" placeholder="Unit cost" class="rounded-lg border border-slate-200 p-2 text-xs"><input name="reason" placeholder="Reason" class="rounded-lg border border-slate-200 p-2 text-xs"></div>
+                <div class="flex justify-end"><button class="rounded-lg bg-[#025c78] px-4 py-2 text-xs font-semibold text-white">Save return</button></div>
+            </form>
+        </template>
+        <template x-if="showStocktake">
+            <form @submit.prevent="createStocktake()" class="space-y-3">
+                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Start stocktake</h3><button type="button" @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+                <input x-model="stocktakeReference" required placeholder="Stocktake reference" class="w-full rounded-lg border border-slate-200 p-2 text-xs">
+                <select x-model="stocktakeLocation" required class="w-full rounded-lg border border-slate-200 p-2 text-xs"><option value="">Select location</option>@foreach($inventoryLocations as $location)<option value="{{ $location->id }}">{{ $location->warehouse->name }} / {{ $location->code }}</option>@endforeach</select>
+                <p class="text-[11px] text-slate-500">The system will snapshot expected quantities for every product in the selected location and send the count for reconciliation.</p>
+                <div class="flex justify-end"><button class="rounded-lg bg-[#025c78] px-4 py-2 text-xs font-semibold text-white">Create stocktake</button></div>
+            </form>
+        </template>
+    </div>
+</div>
 <script>
-    //this script help ot generate sku. code
+    function inventoryOperations() {
+        return {
+            showModal: false,
+            showReturn: false,
+            showStocktake: false,
+            scannerOpen: false,
+            alerts: [],
+            valuation: [],
+            totalValue: 0,
+            scanCode: '',
+            scanResult: null,
+            scanError: '',
+            stocktakeReference: '',
+            stocktakeLocation: '',
+            async loadOperations() {
+                const [alertsResponse, valuationResponse] = await Promise.all([
+                    fetch('{{ route('inventory.alerts') }}', { headers: { Accept: 'application/json' } }),
+                    fetch('{{ route('inventory.valuation') }}', { headers: { Accept: 'application/json' } }),
+                ]);
+                this.alerts = alertsResponse.ok ? await alertsResponse.json() : [];
+                this.valuation = valuationResponse.ok ? await valuationResponse.json() : [];
+                this.totalValue = this.valuation.reduce((sum, row) => sum + Number(row.value || 0), 0);
+            },
+            formatMoney(value) {
+                return `TZS ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            },
+            async lookupCode() {
+                this.scanError = '';
+                this.scanResult = null;
+                const response = await fetch(`{{ route('inventory.lookup') }}?code=${encodeURIComponent(this.scanCode)}`, { headers: { Accept: 'application/json' } });
+                if (! response.ok) {
+                    if (! navigator.onLine && window.inventoryScanner) await window.inventoryScanner.queue(this.scanCode);
+                    this.scanError = response.status === 404 ? 'Product was not found in this company.' : 'Lookup failed. The scan was queued if you are offline.';
+                    return;
+                }
+                this.scanResult = await response.json();
+            },
+            async startScanner() {
+                if (! window.inventoryScanner?.supportsCamera) {
+                    this.scanError = 'Camera barcode scanning is not supported by this browser. Enter the code manually.';
+                    return;
+                }
+                this.scannerOpen = true;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                this.$refs.scannerVideo.srcObject = stream;
+                const detector = new BarcodeDetector();
+                const scan = async () => {
+                    if (! this.scannerOpen) return;
+                    const codes = await detector.detect(this.$refs.scannerVideo);
+                    if (codes.length) {
+                        this.scanCode = codes[0].rawValue;
+                        this.closeOverlays();
+                        await this.lookupCode();
+                        return;
+                    }
+                    requestAnimationFrame(scan);
+                };
+                scan();
+            },
+            closeOverlays() {
+                const video = this.$refs.scannerVideo;
+                video?.srcObject?.getTracks().forEach(track => track.stop());
+                this.showReturn = false;
+                this.showStocktake = false;
+                this.scannerOpen = false;
+            },
+            async createStocktake() {
+                const response = await fetch('{{ route('inventory.stocktakes.store') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}' },
+                    body: JSON.stringify({ warehouse_location_id: this.stocktakeLocation, reference_number: this.stocktakeReference }),
+                });
+                if (response.ok) {
+                    this.closeOverlays();
+                    this.stocktakeReference = '';
+                    this.stocktakeLocation = '';
+                }
+            },
+        };
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const skuInput = document.getElementById('sku');
         if(skuInput){

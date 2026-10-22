@@ -23,15 +23,17 @@ class SessionController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            if ($user?->company_id) {
+            $company = $user?->companies()->where('is_active', true)->first();
+
+            if ($company) {
                 session([
-                    'company_id' => $user->company_id,
-                    'active_company_id' => $user->company_id,
-                    'company_name' => $user->company?->name,
-                    'active_company_name' => $user->company?->name,
+                    'company_id' => $company->id,
+                    'active_company_id' => $company->id,
+                    'company_name' => $company->name,
+                    'active_company_name' => $company->name,
                 ]);
-            } else {
-                $company = Company::first();
+            } elseif ($user->isSuperAdmin()) {
+                $company = Company::where('is_active', true)->first();
 
                 if ($company) {
                     session([

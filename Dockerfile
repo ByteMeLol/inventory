@@ -18,17 +18,18 @@ WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev \
-        libicu-dev libonig-dev default-mysql-client \
+        libicu-dev libonig-dev libsqlite3-dev sqlite3 \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" gd intl mbstring opcache pdo_mysql zip \
+    && docker-php-ext-install -j"$(nproc)" gd intl mbstring opcache pdo_sqlite zip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 COPY --from=frontend /app/public/build ./public/build
 
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
+RUN mkdir -p storage/app storage/framework/cache storage/framework/sessions storage/framework/views \
         storage/logs bootstrap/cache \
+    && touch storage/app/database.sqlite \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwX storage bootstrap/cache
 

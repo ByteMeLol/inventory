@@ -1,21 +1,67 @@
 
-    @props(['company', 'settings'])
+    @props(['company', 'settings', 'inventoryCategories', 'inventoryUnits'])
 
-    <div class="max-w-5xl mx-auto px-4 py-8">
-        
+    <div class="mx-auto max-w-6xl px-4 py-8">
         <!-- PAGE HEADER AREA -->
-        <div class="mb-8 pb-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="mb-7 flex flex-col gap-5 border-b border-[#d8e2da] pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h1 class="text-lg font-bold tracking-tight text-slate-900">System Configuration</h1>
-                <p class="text-xs text-slate-400 mt-0.5">Configure Tanzania-specific defaults for this company tenant.</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#78907e]">Workspace settings</p>
+                <h1 class="mt-1 text-3xl font-semibold tracking-[-0.04em] text-[#17231b]">System configuration</h1>
+                <p class="mt-2 text-sm text-[#718077]">Configure catalog, financial, and company defaults for {{ $company->name }}.</p>
             </div>
             <div>
-                <button type="submit" form="settings-form" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-1.5 px-4 rounded-lg transition shadow-xs flex items-center space-x-2">
+                <button type="submit" form="settings-form" class="bg-[#173b26] px-5 py-3 text-xs font-semibold text-white transition hover:bg-[#285b38]">
                     <i class="fa-solid fa-floppy-disk text-[11px]"></i>
                     <span>Save Settings</span>
                 </button>
             </div>
         </div>
+
+        <section class="mb-7 border border-[#dfe6e0] bg-white p-6">
+            <div class="mb-6 flex items-end justify-between border-b border-[#e8ede9] pb-4">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-[#78907e]">Catalog setup</p>
+                    <h2 class="mt-1 text-xl font-semibold tracking-tight text-[#1b2b20]">Categories and units</h2>
+                    <p class="mt-1 text-xs text-[#8a978e]">Shared by the SKU registration form and scoped to this company.</p>
+                </div>
+                <span class="hidden text-xs text-[#8a978e] sm:block">{{ $inventoryCategories->count() }} categories · {{ $inventoryUnits->count() }} units</span>
+            </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">Product categories</h3>
+                    <form method="POST" action="{{ route('inventory.categories.store') }}" class="mt-3 grid grid-cols-[1fr_110px_auto] gap-2">
+                        @csrf
+                        <input name="name" required placeholder="Category name" class="min-w-0 border border-[#dfe6e0] bg-[#fbfcfb] px-3 py-3 text-xs outline-none focus:border-[#8db59a]">
+                        <input name="code" required placeholder="Code" class="border border-[#dfe6e0] bg-[#fbfcfb] px-3 py-3 text-xs uppercase outline-none focus:border-[#8db59a]">
+                        <button class="bg-[#173b26] px-4 py-3 text-xs font-semibold text-white hover:bg-[#285b38]">Add</button>
+                    </form>
+                    <div class="mt-4 divide-y divide-[#edf1ee] border-y border-[#edf1ee]">
+                        @forelse($inventoryCategories as $category)
+                            <div class="flex items-center justify-between py-3 text-xs"><span class="font-medium text-[#35493a]">{{ $category->name }}</span><span class="font-mono text-[10px] text-[#8a978e]">{{ $category->code }}</span></div>
+                        @empty
+                            <p class="py-4 text-xs text-[#8a978e]">No categories configured.</p>
+                        @endforelse
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-[0.12em] text-[#263b2c]">Measurement units</h3>
+                    <form method="POST" action="{{ route('inventory.units.store') }}" class="mt-3 grid grid-cols-[1fr_80px_90px_auto] gap-2">
+                        @csrf
+                        <input name="name" required placeholder="Unit name" class="min-w-0 border border-[#dfe6e0] bg-[#fbfcfb] px-3 py-3 text-xs outline-none focus:border-[#8db59a]">
+                        <input name="symbol" required placeholder="Symbol" class="border border-[#dfe6e0] bg-[#fbfcfb] px-3 py-3 text-xs outline-none focus:border-[#8db59a]">
+                        <input name="conversion_factor" required value="1" type="number" step="0.000001" min="0.000001" class="border border-[#dfe6e0] bg-[#fbfcfb] px-3 py-3 text-xs outline-none focus:border-[#8db59a]">
+                        <button class="bg-[#173b26] px-4 py-3 text-xs font-semibold text-white hover:bg-[#285b38]">Add</button>
+                    </form>
+                    <div class="mt-4 divide-y divide-[#edf1ee] border-y border-[#edf1ee]">
+                        @forelse($inventoryUnits as $unit)
+                            <div class="flex items-center justify-between py-3 text-xs"><span class="font-medium text-[#35493a]">{{ $unit->name }}</span><span class="font-mono text-[10px] text-[#8a978e]">{{ $unit->symbol }} · {{ $unit->conversion_factor }}</span></div>
+                        @empty
+                            <p class="py-4 text-xs text-[#8a978e]">No units configured.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- MAIN DUAL-COLUMN CONFIGURATION GRID -->
         <form id="settings-form" action="{{ route('settings.update') }}" method="POST">

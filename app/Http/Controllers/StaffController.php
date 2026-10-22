@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class StaffController extends Controller
@@ -19,10 +20,17 @@ class StaffController extends Controller
 
         abort_unless($user?->canManageUsers(), 403, 'Unauthorized user management request.');
 
-        $companies = Company::orderBy('name')->get();
+        $companyId = session('company_id');
+        $companies = $user->isSuperAdmin()
+            ? Company::orderBy('name')->get()
+            : Company::whereKey($companyId)->get();
+        $staffMembers = User::with(['company', 'role'])
+            ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('company_id', $companyId))
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view('staff', [
-            'staffMembers' => User::with(['company', 'role'])->orderBy('created_at', 'desc')->paginate(10),
+            'staffMembers' => $staffMembers,
             'roles' => Role::orderBy('name')->get(),
             'companies' => $companies,
             'canManageUsers' => true,
@@ -43,22 +51,28 @@ class StaffController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['required', 'email', 'unique:users,email'],
             'role_id' => ['required', 'exists:roles,id'],
-            'company_id' => ['nullable', 'exists:companies,id'],
+            'company_id' => ['required', 'exists:companies,id'],
         ]);
 
-        $assignedCompanyId = $validatedData['company_id'] ?? null;
+        $assignedCompanyId = (int) $validatedData['company_id'];
+        abort_unless($user->isSuperAdmin() || $user->belongsToCompany($assignedCompanyId), 403);
 
         $temporaryPassword = Str::upper($validatedData['last_name']);
 
-        User::create([
-            'company_id' => $assignedCompanyId,
-            'first_name' => $validatedData['first_name'],
-            'last_name' => $validatedData['last_name'],
-            'phone' => $validatedData['phone'] ?? null,
-            'email' => $validatedData['email'],
-            'role_id' => $validatedData['role_id'],
-            'password' => Hash::make($temporaryPassword),
-        ]);
+        DB::transaction(function () use ($assignedCompanyId, $validatedData, $temporaryPassword): void {
+            $newUser = User::create([
+                'company_id' => $assignedCompanyId,
+                'first_name' => $validatedData['first_name'],
+                'last_name' => $validatedData['last_name'],
+                'phone' => $validatedData['phone'] ?? null,
+                'email' => $validatedData['email'],
+                'role_id' => $validatedData['role_id'],
+                'password' => Hash::make($temporaryPassword),
+            ]);
+            $newUser->companies()->syncWithoutDetaching([
+                $assignedCompanyId => ['role_id' => $validatedData['role_id'], 'status' => 'active', 'joined_at' => now()],
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Staff account created. Temporary password set to the uppercase last name: ' . $temporaryPassword);
     }

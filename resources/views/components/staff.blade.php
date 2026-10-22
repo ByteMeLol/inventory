@@ -1,28 +1,28 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="rounded-3xl border border-slate-200 bg-[#025c78] px-6 py-7 text-white shadow-xl shadow-slate-900/10">
+    <div class="border border-[#c9d9cc] bg-[#edf2ee] px-6 py-7 text-[#1b3525]">
         <div class="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-3">
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                    Staff Administration
+                    <span class="h-2 w-2 bg-[#3f9b58]"></span>
+                    Staff administration
                 </div>
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight sm:text-4xl">Manage Staff Accounts</h1>
-                    <p class="mt-2 max-w-2xl text-sm text-white/75">Create users, assign roles, and keep every account tied to the correct company scope.</p>
+                    <h1 class="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Manage staff accounts</h1>
+                    <p class="mt-2 max-w-2xl text-sm text-[#6f7d73]">Create users, assign roles, and keep every account tied to the correct company scope.</p>
                 </div>
             </div>
 
             <button type="button" onclick="toggleModal(true)"
-                    class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                    class="inline-flex items-center justify-center border border-[#cbd8ce] bg-[#173b26] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#285b38]">
                 <i class="fa-solid fa-user-plus mr-2 text-slate-500"></i>
                 Add Staff
             </button>
         </div>
 
         <div class="relative mt-6 flex flex-wrap gap-2 text-[11px] font-semibold">
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Companies: {{ $companies->count() }}</span>
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Roles: {{ $roles->count() }}</span>
-            <span class="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">Accounts: {{ $staffMembers->total() }}</span>
+            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Companies: {{ $companies->count() }}</span>
+            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Roles: {{ $roles->count() }}</span>
+            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Accounts: {{ $staffMembers->total() }}</span>
         </div>
     </div>
 

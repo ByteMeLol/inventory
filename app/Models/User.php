@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -36,6 +37,19 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    public function companies(): BelongsToMany
+    {
+        return $this->belongsToMany(Company::class, 'company_memberships')
+            ->withPivot(['role_id', 'status', 'joined_at'])
+            ->wherePivot('status', 'active')
+            ->withTimestamps();
+    }
+
+    public function belongsToCompany(int $companyId): bool
+    {
+        return $this->isSuperAdmin() || $this->companies()->whereKey($companyId)->exists();
+    }
+
     public function isSuperAdmin(): bool
     {
         $roleName = strtolower(str_replace(['_', '-'], ' ', $this->role?->name ?? ''));
@@ -45,9 +59,18 @@ class User extends Authenticatable
 
     public function canManageUsers(): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $companyId = session('company_id');
+        $membership = $companyId
+            ? $this->companies()->whereKey($companyId)->first()?->pivot
+            : null;
         $roleName = strtolower(str_replace(['_', '-'], ' ', $this->role?->name ?? ''));
 
-        return in_array((int) $this->role_id, [1, 3], true) || in_array($roleName, ['super admin', 'admin'], true);
+        return in_array((int) ($membership?->role_id ?? $this->role_id), [1, 3], true)
+            || in_array($roleName, ['super admin', 'admin'], true);
     }
 
      /**
