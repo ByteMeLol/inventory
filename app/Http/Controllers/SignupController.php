@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Company;
 
 class SignupController extends Controller
@@ -33,7 +34,7 @@ class SignupController extends Controller
 
         // return redirect('/')->with('success', 'Account created.');
 
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'first_name'=>['required','string','max:255'],
             'last_name'=>['required','string','max:255'],
             'company_name'=>['required','string','max:255'],
@@ -41,6 +42,15 @@ class SignupController extends Controller
             'email'=>['required','email','unique:users,email'],
             'password'=>['required','string','min:6','confirmed'],
         ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->route('signup.create')
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors($validator);
+        }
+
+        $validatedData = $validator->validated();
 
         $dublicateEmailCheck=User::where('email', $validatedData['email'])->first();
         if($dublicateEmailCheck){

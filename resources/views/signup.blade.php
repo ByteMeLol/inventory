@@ -15,6 +15,17 @@
 				<p class="mt-2 text-sm text-slate-500">Start your free account.</p>
 			</div>
 
+			@if ($errors->any())
+				<div class="mb-5 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+					<p class="font-semibold">Please correct the highlighted fields and try again.</p>
+					<ul class="mt-1 list-inside list-disc text-xs">
+						@foreach ($errors->all() as $error)
+							<li>{{ $error }}</li>
+						@endforeach
+					</ul>
+				</div>
+			@endif
+
 			<form action="{{ route('signup.store') }}" method="POST" class="space-y-5">
 				@csrf
 
@@ -30,6 +41,7 @@
 						placeholder="Your business name"
 					>
 				</div>
+				<x-error_handling name="company_name" />
 				<div class="space-y-2">
 					<label for="name" class="block text-sm font-medium text-slate-700">First name</label>
 					<input
@@ -43,6 +55,7 @@
 						placeholder="Your first name"
 					>
 				</div>
+				<x-error_handling name="first_name" />
                 <div class="space-y-2">
 					<label for="last_name" class="block text-sm font-medium text-slate-700">Last name</label>
 					<input
@@ -56,6 +69,7 @@
 						placeholder="Your last name"
 					>
 				</div>
+				<x-error_handling name="last_name" />
 
 				<div class="space-y-2">
 					<label for="email" class="block text-sm font-medium text-slate-700">Email Address</label>

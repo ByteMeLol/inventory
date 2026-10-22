@@ -14,10 +14,19 @@ class SessionController extends Controller
         dd($request->all());
     }
     public function create(Request $request){
-        $credentials = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->route('login')
+                ->withInput($request->except('password'))
+                ->withErrors($validator);
+        }
+
+        $credentials = $validator->validated();
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
