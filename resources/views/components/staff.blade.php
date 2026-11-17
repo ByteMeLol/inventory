@@ -1,49 +1,127 @@
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-4 py-8" x-data="{
+    onboardModalOpen: false,
+    editModalOpen: false,
+    editStaff: { id: '', first_name: '', last_name: '', email: '', phone: '', role_id: '', company_id: '' },
+    openEdit(staff) {
+        this.editStaff = { ...staff };
+        this.editModalOpen = true;
+    }
+}">
+    <!-- HEADER AREA -->
     <div class="border border-[#c9d9cc] bg-[#edf2ee] px-6 py-7 text-[#1b3525]">
         <div class="relative flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-3">
                 <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider">
                     <span class="h-2 w-2 bg-[#3f9b58]"></span>
-                    Staff administration
+                    Staff & Company Administration
                 </div>
                 <div>
-                    <h1 class="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Manage staff accounts</h1>
-                    <p class="mt-2 max-w-2xl text-sm text-[#6f7d73]">Create users, assign roles, and keep every account tied to the correct company scope.</p>
+                    <h1 class="text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Manage Staff & Companies</h1>
+                    <p class="mt-2 max-w-2xl text-sm text-[#6f7d73]">
+                        Track your staff, assign them across your companies, and manage your multi-company workspace independently.
+                    </p>
                 </div>
             </div>
 
-            <button type="button" onclick="toggleModal(true)"
-                    class="inline-flex items-center justify-center border border-[#cbd8ce] bg-[#173b26] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#285b38]">
-                <i class="fa-solid fa-user-plus mr-2 text-slate-500"></i>
-                Add Staff
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" @click="addCompanyModalOpen = true"
+                        class="inline-flex items-center justify-center border border-[#cbd8ce] bg-white px-4 py-2.5 text-sm font-semibold text-[#173b26] transition hover:bg-[#e6efe8]">
+                    <i class="fa-solid fa-plus mr-2 text-[#3f9b58]"></i>
+                    Add Company
+                </button>
+                <button type="button" @click="onboardModalOpen = true"
+                        class="inline-flex items-center justify-center border border-[#cbd8ce] bg-[#173b26] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#285b38]">
+                    <i class="fa-solid fa-user-plus mr-2 text-[#8cd6a0]"></i>
+                    Add Staff
+                </button>
+            </div>
         </div>
 
         <div class="relative mt-6 flex flex-wrap gap-2 text-[11px] font-semibold">
-            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Companies: {{ $companies->count() }}</span>
+            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">My Companies: {{ $companies->count() }}</span>
             <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Roles: {{ $roles->count() }}</span>
-            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">Accounts: {{ $staffMembers->total() }}</span>
+            <span class="border border-[#cbd8ce] bg-white px-3 py-1.5 text-[#52675a]">My Staff Members: {{ $staffMembers->total() }}</span>
         </div>
     </div>
 
-    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        @foreach($companies->take(3) as $company)
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company</p>
-                <p class="mt-2 text-sm font-semibold text-slate-900">{{ $company->name }}</p>
-                <p class="mt-1 text-[11px] text-slate-500">Selected from the companies table.</p>
-            </div>
-        @endforeach
+    <!-- MY COMPANIES CARDS -->
+    <div class="mt-6">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">My Companies ({{ $companies->count() }})</h3>
+            <button type="button" @click="addCompanyModalOpen = true" class="text-xs font-semibold text-[#1f5431] hover:underline flex items-center gap-1">
+                <i class="fa-solid fa-plus-circle text-xs"></i> New Company
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            @forelse($companies as $company)
+                @php
+                    $isCurrentActive = (int) session('company_id') === (int) $company->id;
+                    $staffCountInCompany = \App\Models\User::where('company_id', $company->id)->where('creator_id', auth()->id())->count();
+                @endphp
+                <div class="rounded-2xl border {{ $isCurrentActive ? 'border-[#3f9b58] bg-[#f7fbf8] ring-1 ring-[#3f9b58]' : 'border-slate-200 bg-white' }} p-4 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider {{ $isCurrentActive ? 'text-[#1e4b2d]' : 'text-slate-400' }}">
+                                <i class="fa-regular fa-building"></i>
+                                {{ $isCurrentActive ? 'Active Workspace' : 'Company' }}
+                            </span>
+                            @if($isCurrentActive)
+                                <span class="h-2 w-2 rounded-full bg-[#3f9b58]" title="Currently active"></span>
+                            @endif
+                        </div>
+                        <p class="mt-2 text-sm font-bold text-slate-900 truncate" title="{{ $company->name }}">{{ $company->name }}</p>
+                        <p class="mt-1 text-[11px] text-slate-500">{{ $staffCountInCompany }} assigned staff</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <a href="/staff?company_id={{ $company->id }}" class="text-[11px] font-medium text-slate-600 hover:text-[#173b26]">
+                            <i class="fa-solid fa-filter mr-1 text-[10px]"></i> View Staff
+                        </a>
+                        @if(! $isCurrentActive)
+                            <a href="/companies/{{ $company->id }}" class="text-[11px] font-semibold text-[#173b26] hover:underline">
+                                Switch <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-full rounded-2xl border border-dashed border-slate-300 p-6 text-center">
+                    <p class="text-sm font-medium text-slate-500">You haven't created any companies yet.</p>
+                    <button type="button" @click="addCompanyModalOpen = true" class="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#173b26] hover:underline">
+                        <i class="fa-solid fa-plus"></i> Create your first company
+                    </button>
+                </div>
+            @endforelse
+        </div>
     </div>
 
+    <!-- FILTER & ROSTER TABLE -->
     <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-100 px-5 py-4 flex items-center justify-between gap-3">
+        <div class="border-b border-slate-100 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Staff Roster</h3>
-                <p class="mt-1 text-[11px] text-slate-500">People, company scope, and role assignments from the user table.</p>
+                <p class="mt-1 text-[11px] text-slate-500">Track and assign your staff members across your companies.</p>
             </div>
-            <div class="text-[11px] font-medium text-slate-500">
-                Showing {{ $staffMembers->count() }} of {{ $staffMembers->total() }}
+
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <label for="company_filter" class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">Filter Company:</label>
+                    <select id="company_filter"
+                            onchange="window.location.href = this.value"
+                            class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <option value="{{ route('staff.index') }}" @selected(empty($selectedCompanyId))>All Companies ({{ $companies->count() }})</option>
+                        @foreach($companies as $company)
+                            <option value="{{ route('staff.index', ['company_id' => $company->id]) }}" @selected((int) $selectedCompanyId === (int) $company->id)>
+                                {{ $company->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="text-[11px] font-medium text-slate-500 whitespace-nowrap">
+                    Showing {{ $staffMembers->count() }} of {{ $staffMembers->total() }}
+                </div>
             </div>
         </div>
 
@@ -52,9 +130,10 @@
                 <thead>
                     <tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                         <th class="px-5 py-3">Identity</th>
-                        <th class="px-5 py-3">Company</th>
+                        <th class="px-5 py-3">Assigned Company</th>
                         <th class="px-5 py-3">Role</th>
-                        <th class="px-5 py-3 text-right">Status</th>
+                        <th class="px-5 py-3">Status</th>
+                        <th class="px-5 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-600">
@@ -73,23 +152,54 @@
                                 </div>
                             </td>
                             <td class="px-5 py-4">
-                                <p class="font-semibold text-slate-800">{{ $staffMember->company->name ?? 'Unassigned' }}</p>
-                                <p class="mt-0.5 text-[11px] text-slate-400">Company ID: {{ $staffMember->company_id ?? 'N/A' }}</p>
+                                <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-800">
+                                    <i class="fa-regular fa-building text-[#52a768]"></i>
+                                    {{ $staffMember->company->name ?? 'Unassigned' }}
+                                </span>
                             </td>
                             <td class="px-5 py-4">
                                 <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700">
-                                    {{ str_replace('_', ' ', $staffMember->role?->name ?? 'user') }}
+                                    {{ str_replace('_', ' ', $staffMember->role?->name ?? 'staff') }}
                                 </span>
                             </td>
-                            <td class="px-5 py-4 text-right">
+                            <td class="px-5 py-4">
                                 <span class="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                                     Active
                                 </span>
                             </td>
+                            <td class="px-5 py-4 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <button type="button"
+                                            @click="openEdit({
+                                                id: {{ $staffMember->id }},
+                                                first_name: '{{ addslashes($staffMember->first_name) }}',
+                                                last_name: '{{ addslashes($staffMember->last_name) }}',
+                                                email: '{{ addslashes($staffMember->email) }}',
+                                                phone: '{{ addslashes($staffMember->phone ?? '') }}',
+                                                role_id: '{{ $staffMember->role_id }}',
+                                                company_id: '{{ $staffMember->company_id }}'
+                                            })"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition shadow-2xs"
+                                            title="Reassign or edit staff member">
+                                        <i class="fa-solid fa-pen-to-square text-[10px] text-slate-500"></i>
+                                        <span>Assign / Edit</span>
+                                    </button>
+
+                                    <form action="{{ route('staff.destroy', $staffMember->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this staff member? This will delete their account access.');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition" title="Remove staff account">
+                                            <i class="fa-regular fa-trash-can text-xs"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-5 py-8 text-center text-slate-400">No staff accounts have been created yet.</td>
+                            <td colspan="5" class="px-5 py-8 text-center text-slate-400">
+                                No staff accounts have been added yet under this scope. Click "Add Staff" to create accounts for your team.
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -101,16 +211,17 @@
         {{ $staffMembers->links() }}
     </div>
 
-    <div id="onboard-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal(false)"></div>
+    <!-- CREATE STAFF MODAL -->
+    <div x-show="onboardModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" @click="onboardModalOpen = false"></div>
 
         <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
             <div class="border-b border-slate-100 px-5 py-4 flex items-center justify-between">
                 <div>
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Create Staff Account</h3>
-                    <p class="mt-1 text-[11px] text-slate-500">New users will be saved in the users table with the selected company and role.</p>
+                    <p class="mt-1 text-[11px] text-slate-500">Add a staff member and assign them to one of your companies.</p>
                 </div>
-                <button type="button" onclick="toggleModal(false)" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                <button type="button" @click="onboardModalOpen = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
@@ -120,34 +231,34 @@
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="space-y-1.5">
-                        <label for="first_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">First Name</label>
-                        <input type="text" name="first_name" id="first_name" value="{{ old('first_name') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <label for="create_first_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">First Name</label>
+                        <input type="text" name="first_name" id="create_first_name" value="{{ old('first_name') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                         <x-error_handling name="first_name" />
                     </div>
                     <div class="space-y-1.5">
-                        <label for="last_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Last Name</label>
-                        <input type="text" name="last_name" id="last_name" value="{{ old('last_name') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <label for="create_last_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Last Name</label>
+                        <input type="text" name="last_name" id="create_last_name" value="{{ old('last_name') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                         <x-error_handling name="last_name" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="space-y-1.5">
-                        <label for="email" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Email Address</label>
-                        <input type="email" name="email" id="email" value="{{ old('email') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <label for="create_email" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Email Address</label>
+                        <input type="email" name="email" id="create_email" value="{{ old('email') }}" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                         <x-error_handling name="email" />
                     </div>
                     <div class="space-y-1.5">
-                        <label for="phone" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Phone</label>
-                        <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <label for="create_phone" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Phone</label>
+                        <input type="tel" name="phone" id="create_phone" value="{{ old('phone') }}" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                         <x-error_handling name="phone" />
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="space-y-1.5">
-                        <label for="role_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Role</label>
-                        <select name="role_id" id="role_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                        <label for="create_role_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Role</label>
+                        <select name="role_id" id="create_role_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                             <option value="">Select role</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->id }}" @selected((string) old('role_id') === (string) $role->id)>{{ str_replace('_', ' ', $role->name) }}</option>
@@ -157,11 +268,11 @@
                     </div>
 
                     <div class="space-y-1.5">
-                        <label for="company_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Company</label>
-                        <select name="company_id" id="company_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
-                            <option value="">Select company</option>
+                        <label for="create_company_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Assign to Company</label>
+                        <select name="company_id" id="create_company_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                            <option value="">Select your company</option>
                             @foreach($companies as $company)
-                                <option value="{{ $company->id }}" @selected((string) old('company_id') === (string) $company->id)>{{ $company->name }}</option>
+                                <option value="{{ $company->id }}" @selected((string) (old('company_id') ?: session('company_id')) === (string) $company->id)>{{ $company->name }}</option>
                             @endforeach
                         </select>
                         <x-error_handling name="company_id" />
@@ -169,27 +280,87 @@
                 </div>
 
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] text-amber-700">
-                    Temporary password will be the staff last name in uppercase.
+                    <i class="fa-solid fa-key mr-1"></i> Temporary password will be set to the staff member's last name in UPPERCASE.
                 </div>
 
                 <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-                    <button type="button" onclick="toggleModal(false)" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
+                    <button type="button" @click="onboardModalOpen = false" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
                     <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">Save Staff</button>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- EDIT / REASSIGN STAFF MODAL -->
+    <div x-show="editModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" @click="editModalOpen = false"></div>
+
+        <div class="relative z-10 w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div class="border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Edit / Reassign Staff Member</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">Update staff details or switch them to another of your companies.</p>
+                </div>
+                <button type="button" @click="editModalOpen = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <form :action="'/staff/' + editStaff.id" method="POST" class="space-y-5 px-5 py-5">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="space-y-1.5">
+                        <label for="edit_first_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">First Name</label>
+                        <input type="text" name="first_name" id="edit_first_name" x-model="editStaff.first_name" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="edit_last_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Last Name</label>
+                        <input type="text" name="last_name" id="edit_last_name" x-model="editStaff.last_name" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="space-y-1.5">
+                        <label for="edit_email" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Email Address</label>
+                        <input type="email" name="email" id="edit_email" x-model="editStaff.email" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="edit_phone" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Phone</label>
+                        <input type="tel" name="phone" id="edit_phone" x-model="editStaff.phone" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="space-y-1.5">
+                        <label for="edit_role_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Role</label>
+                        <select name="role_id" id="edit_role_id" x-model="editStaff.role_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                            @foreach($roles as $role)
+                                <option value="{{ $role->id }}">{{ str_replace('_', ' ', $role->name) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="edit_company_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Assigned Company</label>
+                        <select name="company_id" id="edit_company_id" x-model="editStaff.company_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
+                            @foreach($companies as $company)
+                                <option value="{{ $company->id }}">{{ $company->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-[11px] text-blue-700">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Reassigning a staff member will immediately update their company scope and memberships.
+                </div>
+
+                <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                    <button type="button" @click="editModalOpen = false" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="rounded-lg bg-[#173b26] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#285b38]">Update Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
-<script>
-    function toggleModal(show) {
-        const modal = document.getElementById('onboard-modal');
-
-        if (show) {
-            modal.classList.remove('hidden');
-            return;
-        }
-
-        modal.classList.add('hidden');
-    }
-</script>

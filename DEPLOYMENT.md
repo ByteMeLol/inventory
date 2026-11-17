@@ -50,8 +50,8 @@ APP_PORT=8080
 
 SESSION_DRIVER=database
 SESSION_SECURE_COOKIE=true
-QUEUE_CONNECTION=database
-CACHE_STORE=database
+QUEUE_CONNECTION=redis
+CACHE_STORE=redis
 FILESYSTEM_DISK=public
 LOG_CHANNEL=stack
 LOG_LEVEL=warning
@@ -74,7 +74,7 @@ docker compose run --rm --no-deps app php artisan key:generate --force
 
 ```sh
 docker compose build --pull app web
-docker compose up -d app web queue scheduler
+docker compose up -d app web queue scheduler redis
 ```
 
 Check the services:
@@ -83,6 +83,22 @@ Check the services:
 docker compose ps
 docker compose logs --tail=100 web app
 ```
+
+Redis is used for cache and queue storage. The `app`, `queue`, and `scheduler`
+containers resolve it through the Compose service name `redis`; no Redis port
+is exposed to the host. Verify the connection with:
+
+```sh
+docker compose exec app php artisan tinker --execute="dump(Redis::connection()->ping());"
+```
+
+To dispatch a job, use Laravel's normal queue API:
+
+```php
+SomeJob::dispatch($payload);
+```
+
+The `queue` container consumes those jobs with the Redis queue worker.
 
 ## 5. Initialize Laravel
 

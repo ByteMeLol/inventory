@@ -12,7 +12,7 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\User;
 use App\Models\Warehouse;
-use Illuminate\Support\Facades\Auth; //
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,13 +31,11 @@ class ViewServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
-        // Target your exact layout file path (e.g., components.layouts.app or layouts.app)
         View::composer('components.layout', function ($view) {
-            // Fetch all active companies from the database
-            $companies = Company::orderBy('name')->get();
+            /** @var User|null $user */
+            $user = Auth::user();
+            $companies = $user ? $user->availableCompanies() : collect();
 
-            // Pass the $companies variable directly into the layout file
             $view->with('companies', $companies);
         });
 
@@ -47,22 +45,40 @@ class ViewServiceProvider extends ServiceProvider
             $customers = Customer::when($companyId, function ($query) use ($companyId) {
                 $query->where('company_id', $companyId);
             })->orderBy('company_name')->paginate(10);
-            // counting number of customers
-            // Pass the $companies variable directly into the layout file
+
             $view->with('customers', $customers);
         });
 
         View::composer('components.expenses', function ($view) {
-            // Fetch all active companies from the database
-            $expenses = Expense::orderBy('expense_date')->paginate(10);
-            // sum of expenses for curren month with settlement status cleared
-            $currentMonthClearedExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth())->where('status', 'cleared')->sum('amount');
-            // dd($currentMonthClearedExpenses);
-            $currentMonthExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth());
-            // counting number of customers
-            // Pass the $companies variable directly into the layout file
-            // total expenses cleared last month
-            $lastMonthClearedExpenses = $expenses->where('expense_date', '>=', now()->subMonth()->startOfMonth())->where('expense_date', '<=', now()->subMonth()->endOfMonth())->where('status', 'cleared')->sum('amount');
+            $companyId = session('company_id');
+
+            $expenses = Expense::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })->orderBy('expense_date', 'desc')->paginate(10);
+
+            $currentMonthClearedExpenses = Expense::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+                ->where('expense_date', '>=', now()->startOfMonth())
+                ->where('expense_date', '<=', now()->endOfMonth())
+                ->where('status', 'cleared')
+                ->sum('amount');
+
+            $currentMonthExpenses = Expense::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+                ->where('expense_date', '>=', now()->startOfMonth())
+                ->where('expense_date', '<=', now()->endOfMonth())
+                ->get();
+
+            $lastMonthClearedExpenses = Expense::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+                ->where('expense_date', '>=', now()->subMonth()->startOfMonth())
+                ->where('expense_date', '<=', now()->subMonth()->endOfMonth())
+                ->where('status', 'cleared')
+                ->sum('amount');
+
             $view->with('currentMonthClearedExpenses', $currentMonthClearedExpenses);
             $view->with('currentMonthExpenses', $currentMonthExpenses);
             $view->with('lastMonthClearedExpenses', $lastMonthClearedExpenses);
@@ -72,7 +88,6 @@ class ViewServiceProvider extends ServiceProvider
         View::composer('components.sales', function ($view) {
             $companyId = session('company_id');
 
-            // fetch customers and inventory for the active company
             $customers = Customer::when($companyId, function ($query) use ($companyId) {
                 $query->where('company_id', $companyId);
             })->orderBy('company_name')->get();
@@ -81,11 +96,17 @@ class ViewServiceProvider extends ServiceProvider
                 $query->where('company_id', $companyId);
             })->orderBy('description')->get();
 
-            // sales records
-            $sales = Sale::where('company_id', $companyId)->orderBy('created_at', 'desc')->paginate(10);
-            // paid sales in a current month
+            $sales = Sale::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })->orderBy('created_at', 'desc')->paginate(10);
 
-            $paidsales = $sales->where('created_at', '>=', now()->startOfMonth())->where('created_at', '<=', now()->endOfMonth())->where('status', 'paid')->sum('total_amount');
+            $paidsales = Sale::when($companyId, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->where('created_at', '<=', now()->endOfMonth())
+                ->where('status', 'paid')
+                ->sum('total_amount');
 
             $view->with('customers', $customers);
             $view->with('inventoryItems', $inventoryItems);
@@ -204,23 +225,41 @@ class ViewServiceProvider extends ServiceProvider
                 abort(403, 'Unauthorized user management request.');
             }
 
-            $companies = $user->isSuperAdmin()
-                ? Company::orderBy('name')->get()
-                : Company::where('id', $user->company_id)->orderBy('name')->get();
+            $companies = $user->availableCompanies();
+            $roles = Role::whereNotIn('name', ['super admin'])->orderBy('name')->get();
 
-            $view->with('staffMembers', User::with(['company', 'role'])->orderBy('created_at', 'desc')->paginate(10));
-            $view->with('roles', Role::orderBy('name')->get());
+            $requestedCompanyId = request('company_id');
+            $selectedCompanyId = null;
+
+            if ($requestedCompanyId && $user->belongsToCompany((int) $requestedCompanyId)) {
+                $selectedCompanyId = (int) $requestedCompanyId;
+            } elseif ($requestedCompanyId === null && session()->has('company_id') && $user->belongsToCompany((int) session('company_id'))) {
+                $selectedCompanyId = (int) session('company_id');
+            }
+
+            $staffMembers = $user->staffQuery($selectedCompanyId)->paginate(10);
+
+            $view->with('staffMembers', $staffMembers);
+            $view->with('roles', $roles);
             $view->with('companies', $companies);
+            $view->with('selectedCompanyId', $selectedCompanyId);
             $view->with('canManageUsers', true);
             $view->with('currentUser', $user);
         });
 
         View::composer('components.reports', function ($view) {
-            $selectedCompanyId = request('company_id') ?: session('company_id');
-            $selectedStatementClass = request('statement_class', 'sales_summary');
-            $isAdmin = Auth::check() && Auth::user()->role_id == 1;
+            /** @var User|null $user */
+            $user = Auth::user();
+            $companies = $user ? $user->availableCompanies() : collect();
 
-            $companies = Company::orderBy('name')->get();
+            $selectedCompanyId = request('company_id') ?: session('company_id');
+            if ($selectedCompanyId && $user && ! $user->belongsToCompany((int) $selectedCompanyId)) {
+                $selectedCompanyId = $companies->first()?->id;
+            }
+
+            $selectedStatementClass = request('statement_class', 'sales_summary');
+            $isAdmin = $user && $user->canManageUsers();
+
             $selectedCompany = $selectedCompanyId ? Company::find($selectedCompanyId) : null;
 
             $companySales = Sale::with('customer')

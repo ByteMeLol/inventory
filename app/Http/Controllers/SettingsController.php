@@ -70,6 +70,7 @@ class SettingsController extends Controller
         $companyId = $request->session()->get('company_id');
 
         abort_unless($companyId, 403, 'No active company selected.');
+        abort_unless($request->user()?->belongsToCompany((int) $companyId), 403, 'Unauthorized company access.');
 
         return Company::findOrFail($companyId);
     }

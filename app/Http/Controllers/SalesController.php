@@ -16,6 +16,9 @@ class SalesController extends Controller
     //
     public function store(Request $request, FinancePostingService $finance)
     {
+        $companyId = session('company_id');
+        abort_unless($companyId && auth()->user()?->belongsToCompany((int) $companyId), 403, 'Unauthorized company access.');
+
         // dd($request->all());
         $validatedData = $request->validate([
             'customer_id' => [
@@ -112,9 +115,11 @@ class SalesController extends Controller
 
     public function updateStatus(Request $request, Sale $sale)
     {
+        $companyId = session('company_id');
+        abort_unless($companyId && auth()->user()?->belongsToCompany((int) $companyId), 403, 'Unauthorized company access.');
 
         // Ensure the sale belongs to the current company
-        if ($sale->company_id !== session('company_id')) {
+        if ($sale->company_id !== (int) $companyId) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -126,7 +131,10 @@ class SalesController extends Controller
 
     public function downloadInvoice(Sale $sale)
     {
-        if ($sale->company_id !== session('company_id')) {
+        $companyId = session('company_id');
+        abort_unless($companyId && auth()->user()?->belongsToCompany((int) $companyId), 403, 'Unauthorized company access.');
+
+        if ($sale->company_id !== (int) $companyId) {
             abort(403, 'Unauthorized action.');
         }
 

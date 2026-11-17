@@ -53,6 +53,7 @@ class FinanceController extends Controller
     {
         $companyId = session('company_id') ?: auth()->user()?->company_id;
         abort_unless($companyId, 403, 'No active company scope found.');
+        abort_unless(auth()->user()?->belongsToCompany((int) $companyId), 403, 'Unauthorized company access.');
 
         return (int) $companyId;
     }

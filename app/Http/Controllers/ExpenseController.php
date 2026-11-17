@@ -38,11 +38,13 @@ class ExpenseController extends Controller
 
     public function index()
     {
-        $expenses = Expense::all();
+        $companyId = session('company_id');
+        $expenses = Expense::when($companyId, fn ($q) => $q->where('company_id', $companyId))
+            ->orderBy('expense_date', 'desc')
+            ->get();
 
         // sum of expenses for curren month with settlement status cleared
         $currentMonthClearedExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth())->where('status', 'cleared')->sum('amount');
-        // dd($currentMonthClearedExpenses);
         $currentMonthExpenses = $expenses->where('expense_date', '>=', now()->startOfMonth())->where('expense_date', '<=', now()->endOfMonth());
 
         return view('expenses', compact('expenses', 'currentMonthExpenses', 'currentMonthClearedExpenses'));

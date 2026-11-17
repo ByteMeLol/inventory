@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
@@ -15,6 +16,7 @@ class Company extends Model
     protected $fillable = [
         'name',
         'slug',
+        'owner_id',
         'is_active',
         'settings',
     ];
@@ -25,13 +27,24 @@ class Company extends Model
     ];
 
     /**
-     * Get all users assigned to this company.
+     * User who owns/created this company.
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * Get all users directly assigned to this company as primary company.
      */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Users who are members of this company.
+     */
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'company_memberships')

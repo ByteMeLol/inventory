@@ -46,7 +46,7 @@ class CustomerController extends Controller
     }
     public function index(){
         $companyId = session('company_id');
-        $customers = $companyId ? Customer::where('company_id', $companyId)->get() : Customer::all();
+        $customers = $companyId ? Customer::where('company_id', $companyId)->get() : collect();
         return view('customers', compact('customers'));
     }
 }

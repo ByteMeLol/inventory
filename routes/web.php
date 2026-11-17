@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyScopeConttroller;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ExpenseController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SignupController;
+use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,6 +24,7 @@ Route::get('/signin', function () {
     return view('index');
 })->name('login')->middleware('guest');
 Route::post('/login', [SessionController::class, 'create'])->name('login')->middleware('guest');
+
 Route::post('/logout', [SessionController::class, 'destroy'])->name('logout')->middleware('auth');
 
 Route::get('/signup', [SignupController::class, 'create'])->name('signup.create')->middleware('guest'); 
@@ -36,18 +39,21 @@ Route::get('/dashboard', function () {
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index')->middleware('auth');
 Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index')->middleware('auth');
 Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('auth');
-Route::get('/staff', '\\App\\Http\\Controllers\\StaffController@index')->name('staff.index')->middleware('auth');
-Route::post('/staff', '\\App\\Http\\Controllers\\StaffController@store')->name('staff.store')->middleware('auth');
-Route::get('/settings', 'App\\Http\\Controllers\\SettingsController@edit')->name('settings.edit')->middleware('auth');
-Route::put('/settings', 'App\\Http\\Controllers\\SettingsController@update')->name('settings.update')->middleware('auth');
+Route::get('/staff', [StaffController::class, 'index'])->name('staff.index')->middleware('auth');
+Route::post('/staff', [StaffController::class, 'store'])->name('staff.store')->middleware('auth');
+Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update')->middleware('auth');
+Route::delete('/staff/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy')->middleware('auth');
+Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'edit'])->name('settings.edit')->middleware('auth');
+Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update')->middleware('auth');
 Route::get('/profile', [ProfileController::class, 'edit'])->middleware('auth');
 Route::post('/profile', [ProfileController::class, 'update'])->middleware('auth');
 Route::get('/reports', function () {
     return view('reports');
 })->middleware('auth');
 Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store')->middleware('auth');
-Route::post('/expenses',[ExpenseController::class,'store'])->name('expenses.store')->middleware('auth');
-Route::get('/companies/{id}',[CompanyScopeConttroller::class, 'switchCompany'])->name('companies.switch')->middleware('auth');
+Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store')->middleware('auth');
+Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store')->middleware('auth');
+Route::get('/companies/{id}', [CompanyController::class, 'switchCompany'])->name('companies.switch')->middleware('auth');
 Route::post('/sales',[SalesController::class,'store'])->name('sales.store')->middleware('auth');
 Route::get('/sales/{sale}/invoice', [SalesController::class, 'downloadInvoice'])->name('sales.invoice.download')->middleware('auth');
 Route::put('/sales/{sale}', [SalesController::class, 'updateStatus'])->name('sales.updateStatus')->middleware('auth');

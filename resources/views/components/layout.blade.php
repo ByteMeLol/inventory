@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="h-full font-sans antialiased text-[#15221d]" x-data="{ mobileSidebarOpen: false }">
+<body class="h-full font-sans antialiased text-[#15221d]" x-data="{ mobileSidebarOpen: false, addCompanyModalOpen: false }">
     @php
         $hideSalesAndInventory = (int) session('company_id') === 2;
         $navItem = 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition';
@@ -36,20 +36,39 @@
             </div>
 
             <div class="mt-7 rounded-2xl border border-[#e6eee8] bg-white p-2.5 shadow-[0_4px_16px_rgba(31,66,44,0.04)]" x-data="{ open: false }">
-                <p class="px-2 pb-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#98a59c]">Workspace</p>
-                @if(auth()->user()->isSuperAdmin() || is_null(auth()->user()->company_id))
-                    <button @click="open = !open" class="flex w-full items-center justify-between rounded-xl bg-[#f2f8f3] px-2.5 py-2 text-left text-xs font-semibold text-[#284d35]">
-                        <span class="flex min-w-0 items-center gap-2"><i class="fa-regular fa-building text-[#72b780]"></i><span class="truncate">{{ session('company_name', 'Select Company') }}</span></span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-[#94a199]" :class="open ? 'rotate-180' : ''"></i>
+                <div class="flex items-center justify-between px-2 pb-1">
+                    <p class="text-[9px] font-bold uppercase tracking-[0.14em] text-[#98a59c]">Workspace</p>
+                    <button type="button" @click="addCompanyModalOpen = true" class="text-[10px] font-bold text-[#1f5431] hover:text-[#143c22] transition inline-flex items-center gap-1" title="Add Company">
+                        <i class="fa-solid fa-plus text-[9px]"></i> Add
                     </button>
-                    <div x-show="open" @click.outside="open = false" x-transition class="absolute mt-2 w-[218px] rounded-xl border border-[#e3ebe5] bg-white p-1.5 shadow-xl">
-                        @foreach ($companies as $company)
-                            <a href="/companies/{{ $company->id }}" class="block rounded-lg px-3 py-2 text-xs font-medium text-[#45604d] hover:bg-[#eef8f0]"><i class="fa-regular fa-building mr-2 text-[#86c994]"></i>{{ $company->name }}</a>
-                        @endforeach
+                </div>
+                <button @click="open = !open" class="flex w-full items-center justify-between rounded-xl bg-[#f2f8f3] px-2.5 py-2 text-left text-xs font-semibold text-[#284d35]">
+                    <span class="flex min-w-0 items-center gap-2">
+                        <i class="fa-regular fa-building text-[#72b780]"></i>
+                        <span class="truncate">{{ session('company_name', 'Select Company') }}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-[#94a199] transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <div x-show="open" @click.outside="open = false" x-transition class="absolute left-4 z-50 mt-2 w-[218px] rounded-xl border border-[#e3ebe5] bg-white p-1.5 shadow-xl">
+                    <div class="max-h-48 overflow-y-auto divide-y divide-[#f2f6f3]">
+                        @forelse ($companies as $company)
+                            <a href="/companies/{{ $company->id }}" class="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium {{ (int) session('company_id') === (int) $company->id ? 'bg-[#eef8f0] text-[#1e4b2d] font-bold' : 'text-[#45604d] hover:bg-[#eef8f0]' }}">
+                                <span class="truncate"><i class="fa-regular fa-building mr-2 text-[#86c994]"></i>{{ $company->name }}</span>
+                                @if((int) session('company_id') === (int) $company->id)
+                                    <i class="fa-solid fa-check text-[10px] text-[#3f9b58]"></i>
+                                @endif
+                            </a>
+                        @empty
+                            <p class="px-3 py-2 text-[11px] text-slate-400">No companies found.</p>
+                        @endforelse
                     </div>
-                @else
-                    <div class="flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-[#284d35]"><i class="fa-regular fa-building text-[#72b780]"></i><span class="truncate">{{ auth()->user()->company->name }}</span></div>
-                @endif
+                    <div class="border-t border-[#edf2ee] pt-1.5 mt-1">
+                        <button type="button" @click="open = false; addCompanyModalOpen = true" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#1f5431] hover:bg-[#eef8f0]">
+                            <i class="fa-solid fa-plus-circle text-[#52a768]"></i>
+                            <span>Create Company</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <nav class="mt-7 flex-1 space-y-1 overflow-y-auto">
@@ -99,6 +118,56 @@
                 </div>
             </header>
             <main class="flex-1 overflow-y-auto bg-[#f6f8f7] p-4 sm:p-7 lg:p-9">{{ $slot }}</main>
+        </div>
+    </div>
+
+    <!-- GLOBAL ADD COMPANY MODAL -->
+    <div x-show="addCompanyModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" style="display: none;">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" @click="addCompanyModalOpen = false"></div>
+
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div class="border-b border-slate-100 px-5 py-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Create New Company</h3>
+                    <p class="mt-1 text-[11px] text-slate-500">Add another company branch or entity under your account.</p>
+                </div>
+                <button type="button" @click="addCompanyModalOpen = false" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('companies.store') }}" method="POST" class="space-y-4 px-5 py-5">
+                @csrf
+                <div class="space-y-1.5">
+                    <label for="modal_company_name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Company Name</label>
+                    <input type="text" name="name" id="modal_company_name" required placeholder="e.g. Acme Logistics Ltd" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#52a768] focus:bg-white">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label for="modal_company_phone" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Phone (Optional)</label>
+                        <input type="tel" name="phone" id="modal_company_phone" placeholder="+255..." class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#52a768] focus:bg-white">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="modal_company_currency" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">Currency</label>
+                        <select name="currency" id="modal_company_currency" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[#52a768] focus:bg-white">
+                            <option value="TZS">TZS (TSh)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="KES">KES (KSh)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[11px] text-emerald-800">
+                    <i class="fa-solid fa-circle-info mr-1 text-[#3f9b58]"></i> Once created, the workspace will automatically switch to your new company.
+                </div>
+
+                <div class="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                    <button type="button" @click="addCompanyModalOpen = false" class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="rounded-lg bg-[#173b26] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#285b38]">Create Company</button>
+                </div>
+            </form>
         </div>
     </div>
 </body>
