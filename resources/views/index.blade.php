@@ -191,7 +191,7 @@
 
                         <!-- ADDITIONAL BUTTON EXAMPLE (E.G. SSO / PASSKEY / ALTERNATIVE ACTION) -->
                         <button
-                            type="button"
+                            type="submit"
                             class="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200 active:scale-[0.99]"
                         >
                             <i class="fa-solid fa-key text-xs text-slate-500"></i>
