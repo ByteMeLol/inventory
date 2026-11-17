@@ -143,7 +143,7 @@ class InventoryController extends Controller
         ]);
         $return = $operations->createReturn($companyId, $data, $request->user());
 
-        return back()->with('success', ucfirst($data['direction']).' return recorded.');
+        return back()->with('success', __(':direction return recorded.', ['direction' => ucfirst($data['direction'])]));
     }
 
     public function startStocktake(Request $request, InventoryOperationsService $operations)

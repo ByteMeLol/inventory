@@ -76,7 +76,7 @@ class PurchaseController extends Controller
             return $purchase;
         });
 
-        return redirect()->route('purchases.index')->with('success', "Purchase {$purchase->purchase_number} recorded.");
+        return redirect()->route('purchases.index')->with('success', __('Purchase :number recorded.', ['number' => $purchase->purchase_number]));
     }
 
     public function storeSupplier(Request $request)

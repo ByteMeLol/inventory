@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        staff
+        {{ __('Team members') }}
     </x-slot:title>
    <x-success_alert />
    <x-staff />

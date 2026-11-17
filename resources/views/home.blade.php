@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        Home
+        {{ __('Home') }}
     </x-slot:title>
    <x-success_alert />
    <x-home />

@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        inventory
+        {{ __('Inventory') }}
     </x-slot:title>
    <x-success_alert />
    <x-inventory />

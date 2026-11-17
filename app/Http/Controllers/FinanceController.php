@@ -46,7 +46,7 @@ class FinanceController extends Controller
         ]);
         $transaction = FinancialTransaction::create([...$data, 'company_id' => $companyId]);
 
-        return back()->with('success', "Transaction {$transaction->reference} posted.");
+        return back()->with('success', __('Transaction :reference posted.', ['reference' => $transaction->reference]));
     }
 
     private function companyId(): int

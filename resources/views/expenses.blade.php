@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        expenses
+        {{ __('Expenses') }}
     </x-slot:title>
    <x-success_alert />
    <x-expenses />

@@ -1,286 +1,163 @@
-<div class="inventory-page mx-auto w-full max-w-[1380px] px-1 py-2 sm:px-2 lg:px-3"
+<div class="inventory-page mx-auto w-full max-w-7xl px-4 py-8"
      x-data="inventoryOperations()"
      x-init="loadOperations()"
      @open-modal.window="if ($event.detail === 'add-item') showModal = true"
      @close-modal.window="showModal = false">
             
-    <div class="mb-8 flex flex-col gap-6 border-b border-[#d8e2da] pb-7 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <div class="flex items-center gap-2">
-                <span class="flex h-12 w-12 items-center justify-center border border-[#c4d8c8] bg-[#e7f2e9] text-[#1d6535]"><i class="fa-solid fa-cubes-stacked"></i></span>
-                <div>
-                    <p class="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#6f8976]">Stock workspace</p>
-                    <h1 class="text-3xl font-semibold tracking-[-0.04em] text-[#17231b]">Inventory overview</h1>
-                    <p class="mt-2 text-sm text-[#718077]">Catalog, stock health, traceability, and warehouse operations in one view.</p>
+    <!-- Page Header Area -->
+    <div class="mb-8 rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-xs">
+                <i class="fa-solid fa-boxes-stacked text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">{{ __('Inventory overview') }}</h1>
+                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                        {{ $inventory->total() }} {{ __('SKUs') }}
+                    </span>
                 </div>
+                <p class="mt-1 text-xs sm:text-sm text-slate-500">{{ __('Catalog, stock health, traceability, and warehouse operations in one view.') }}</p>
             </div>
         </div>
-        <div class="flex items-center space-x-2">
-            <button @click="$dispatch('open-modal', 'add-item')" class="flex items-center gap-2 bg-[#173b26] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#285b38]">
-                <i class="fa-solid fa-plus text-[11px]"></i>
-                <span>Register New SKU</span>
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button type="button" @click="showStocktake = true" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50">
+                <i class="fa-solid fa-clipboard-check text-slate-400"></i>
+                <span>{{ __('Start stocktake') }}</span>
+            </button>
+            <button @click="$dispatch('open-modal', 'add-item')" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800">
+                <i class="fa-solid fa-plus text-slate-300"></i>
+                <span>{{ __('Register New SKU') }}</span>
             </button>
         </div>
     </div>
 
-    <div class="mb-8 grid grid-cols-1 gap-0 border-y border-l border-[#dfe6e0] bg-white sm:grid-cols-3">
-        <div class="flex items-center justify-between border-r border-b border-[#dfe6e0] p-6 sm:border-b-0">
+    <!-- 3 Core Inventory Metrics -->
+    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <!-- Total Catalog Items -->
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
             <div>
-                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#849389]">Total catalog items</span>
-                <span class="mt-2 block text-3xl font-semibold tracking-tight text-[#1b3525]">{{$inventory->count()}} <small class="text-sm font-normal text-[#93a098]">SKUs</small></span>
+                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Total catalog items') }}</span>
+                <span class="mt-2 block text-2xl font-bold tracking-tight text-slate-900">{{ $inventory->count() }} <span class="text-xs font-normal text-slate-400">SKUs</span></span>
             </div>
-            <div class="flex h-10 w-10 items-center justify-center border border-[#dce9de] bg-[#f5faf5] text-[#6eb27d]">
-                <i class="fa-solid fa-boxes-stacked"></i>
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                <i class="fa-solid fa-layer-group text-base"></i>
             </div>
         </div>
-        <div class="flex items-center justify-between border-r border-b border-[#eadfce] bg-[#fffdf9] p-6 sm:border-b-0">
+
+        <!-- Critical Low Stock -->
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
             <div>
-                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#9b866c]">Critical low stock</span>
-                <span id='low_stock' class="mt-2 block text-3xl font-semibold tracking-tight text-[#a9682e]">{{ $lowStockCount }} <small class="text-sm font-normal text-[#c69d70]">lines</small></span>
+                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Critical low stock') }}</span>
+                <span id="low_stock" class="mt-2 block text-2xl font-bold tracking-tight {{ $lowStockCount > 0 ? 'text-amber-600' : 'text-slate-900' }}">{{ $lowStockCount }} <span class="text-xs font-normal text-slate-400">{{ __('lines') }}</span></span>
             </div>
-            <div class="flex h-10 w-10 items-center justify-center border border-[#f0dfc9] bg-[#fff8ed] text-[#c77e39]">
-                <i class="fa-solid fa-triangle-exclamation"></i>
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl {{ $lowStockCount > 0 ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-400 border border-slate-100' }}">
+                <i class="fa-solid fa-triangle-exclamation text-base"></i>
             </div>
         </div>
-        <div class="flex items-center justify-between border-r border-[#dfe6e0] p-6">
+
+        <!-- Total Capital Valuation -->
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors">
             <div>
-                <span class="block text-[11px] font-bold uppercase tracking-[0.14em] text-[#849389]">Total capital valuation</span>
-                <span class="mt-2 block text-3xl font-semibold tracking-tight text-[#1b3525]" x-text="formatMoney(totalValue)">TZS 0.00</span>
+                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">{{ __('Total capital valuation') }}</span>
+                <span class="mt-2 block text-2xl font-bold tracking-tight text-slate-900" x-text="formatMoney(totalValue)">TZS 0.00</span>
             </div>
-            <div class="flex h-10 w-10 items-center justify-center border border-[#dce9de] bg-[#f5faf5] text-[#6eb27d]">
-                <i class="fa-solid fa-scale-balanced"></i>
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <i class="fa-solid fa-scale-balanced text-base"></i>
             </div>
         </div>
     </div>
 
-    <div class="hidden">
-    <div class="mb-7 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section class="border border-[#e6d7c2] bg-[#fffdf9] p-6 lg:col-span-2">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#6c4d2c]">Action centre</h2>
-                    <p class="mt-1 text-xs text-[#9a7b59]">Reorder and expiry signals for this company.</p>
-                </div>
-                <button type="button" @click="loadOperations()" class="border border-[#dfc8a9] bg-white px-3 py-2 text-xs font-semibold text-[#8b633c] hover:bg-[#fff7eb]">Refresh</button>
-            </div>
-            <div class="mt-3 space-y-2">
-                <template x-for="alert in alerts" :key="alert.id">
-                    <div class="flex items-center justify-between border border-[#eadcc9] bg-white px-4 py-3 text-xs">
-                        <span class="font-medium text-slate-700" x-text="alert.message"></span>
-                        <span class="border border-[#ead5b9] bg-[#fff8ed] px-2 py-1 text-[10px] font-bold uppercase text-[#9a6c38]" x-text="alert.type"></span>
-                    </div>
-                </template>
-                <p x-show="!alerts.length" class="border border-dashed border-[#dfc8a9] bg-white/60 p-4 text-xs text-[#9a7b59]">No open inventory alerts.</p>
-            </div>
-        </section>
-        <section class="border border-[#dfe6e0] bg-white p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Inventory value</h2>
-                    <p class="mt-1 text-xs text-[#8a978e]">Weighted average or FIFO.</p>
-                </div>
-                <i class="fa-solid fa-chart-line text-slate-300"></i>
-            </div>
-            <p class="mt-6 text-3xl font-semibold text-[#1b2b20]" x-text="formatMoney(totalValue)">TZS 0.00</p>
-            <p class="mt-2 text-xs text-[#8a978e]" x-text="valuation.length + ' products valued'"></p>
-        </section>
-    </div>
-
-    <div class="mb-7 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section class="border border-[#dfe6e0] bg-white p-6 lg:col-span-2">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Barcode scanner</h2>
-                    <p class="mt-1 text-xs text-[#8a978e]">Scan a SKU or barcode to open live stock balances.</p>
-                </div>
-                <button type="button" @click="startScanner()" class="bg-[#173b26] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#285b38]">
-                    <i class="fa-solid fa-camera mr-1"></i> Open camera
-                </button>
-            </div>
-            <form class="mt-5 flex gap-2" @submit.prevent="lookupCode()">
-                <input x-model="scanCode" required placeholder="Enter or scan code" class="min-w-0 flex-1 border border-[#dfe6e0] bg-[#fbfcfb] px-4 py-3 text-sm font-mono outline-none focus:border-[#8db59a]">
-                <button class="bg-[#263b2c] px-5 py-3 text-xs font-semibold text-white">Lookup</button>
-            </form>
-            <div x-show="scanResult" class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[11px]" style="display:none">
-                <p class="font-bold text-emerald-900" x-text="scanResult?.description"></p>
-                <p class="mt-1 text-emerald-800">SKU <span class="font-mono" x-text="scanResult?.sku"></span> · <span x-text="scanResult?.stock_balances?.length || 0"></span> locations</p>
-            </div>
-            <p x-show="scanError" class="mt-3 rounded-lg bg-red-50 p-3 text-[11px] text-red-700" x-text="scanError" style="display:none"></p>
-        </section>
-        <section class="border border-[#dfe6e0] bg-white p-6">
-            <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">Operations</h2>
-            <div class="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" @click="showReturn = true" class="rounded-lg border border-slate-200 p-3 text-left text-[10px] font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-rotate-left mb-1 block text-slate-400"></i>Record return</button>
-                <button type="button" @click="showStocktake = true" class="rounded-lg border border-slate-200 p-3 text-left text-[10px] font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-clipboard-check mb-1 block text-slate-400"></i>Start stocktake</button>
-            </div>
-        </section>
-    </div>
-
-    </div>
-
-    <div class="mb-5 flex items-center justify-between border-b border-[#dfe6e0] pb-4">
-        <div>
-            <h2 class="text-sm font-bold uppercase tracking-[0.12em] text-[#263b2c]">SKU catalog</h2>
-            <p class="mt-1 text-xs text-[#8a978e]">Manage products, pricing, and available stock.</p>
-        </div>
-        <span class="text-xs text-[#8a978e]">{{ $inventory->total() }} records</span>
-    </div>
-
-    <div class="mb-6 border border-[#dfe6e0] bg-white p-4">
+    <!-- Filter & Search Toolbar Card -->
+    <div class="mb-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
         <form method="GET" action="/inventory" class="flex flex-col md:flex-row items-center gap-3">
             <div class="relative w-full md:flex-1">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400 text-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400 text-xs">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
-                <input type="text" name="search" placeholder="Filter by SKU code or part description..." class="w-full bg-gray-50/50 border border-gray-200 rounded-lg py-1.5 pl-9 pr-4 text-xs text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('Filter by SKU code or part description...') }}" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-xs text-slate-800 outline-none focus:bg-white focus:border-slate-400 focus:ring-4 focus:ring-slate-100 transition-all">
             </div>
-            <div class="w-full md:w-48">
-                <select name="category" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg py-1.5 px-2.5 text-xs text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
-                    <option value="">All Categories</option>
+            <div class="w-full md:w-56">
+                <select name="category" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition-all">
+                    <option value="">{{ __('All Categories') }}</option>
                     @foreach ($inventoryCategories as $category)
                         <option value="{{ $category->name }}" @selected(request('category') === $category->name)>{{ $category->name }}</option>
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="w-full md:w-auto bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs py-1.5 px-4 rounded-lg transition shadow-xs">
-                Apply Filters
+            <button type="submit" class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-2 px-5 rounded-xl transition shadow-xs flex items-center justify-center gap-2">
+                <i class="fa-solid fa-filter text-[11px] text-slate-300"></i>
+                <span>{{ __('Apply Filters') }}</span>
             </button>
+            @if(request('search') || request('category'))
+                <a href="/inventory" class="text-xs font-semibold text-slate-500 hover:text-slate-800 px-2 py-2">{{ __('Reset') }}</a>
+            @endif
         </form>
     </div>
 
-    <div class="hidden">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Warehouse network</h2>
-                    <p class="text-[10px] text-gray-400 mt-1">Stock is controlled by warehouse and bin location.</p>
-                </div>
-                <i class="fa-solid fa-location-crosshairs text-gray-300"></i>
+    <!-- Catalog Table Container -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900">{{ __('SKU catalog') }}</h2>
+                <p class="mt-0.5 text-xs text-slate-500">{{ __('Manage products, pricing, and available stock.') }}</p>
             </div>
-            <div class="space-y-2">
-                @forelse ($warehouses as $warehouse)
-                    <div class="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/50 px-3 py-2">
-                        <div>
-                            <span class="font-mono text-[10px] font-bold text-gray-900">{{ $warehouse->code }}</span>
-                            <span class="ml-2 text-[11px] text-gray-600">{{ $warehouse->name }}</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400">{{ $warehouse->locations->count() }} locations</span>
-                    </div>
-                @empty
-                    <p class="rounded-lg border border-dashed border-gray-200 p-3 text-[11px] text-gray-400">No warehouse has been configured yet.</p>
-                @endforelse
-            </div>
+            <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600">{{ $inventory->total() }} {{ __('records') }}</span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <form method="POST" action="{{ route('inventory.categories.store') }}" class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs space-y-2">
-                @csrf
-                <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Add product category</h2>
-                <div class="grid grid-cols-2 gap-2"><input name="name" required placeholder="Category name" class="rounded border p-2 text-xs"><input name="code" required placeholder="Code" class="rounded border p-2 text-xs"></div>
-                <button class="rounded bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white">Create category</button>
-            </form>
-            <form method="POST" action="{{ route('inventory.units.store') }}" class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs space-y-2">
-                @csrf
-                <h2 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Add measurement unit</h2>
-                <div class="grid grid-cols-3 gap-2"><input name="name" required placeholder="Kilogram" class="rounded border p-2 text-xs"><input name="symbol" required placeholder="kg" class="rounded border p-2 text-xs"><input name="conversion_factor" required value="1" type="number" step="0.000001" class="rounded border p-2 text-xs"></div>
-                <button class="rounded bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white">Create unit</button>
-            </form>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4 mb-6 lg:grid-cols-2">
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div class="mb-3 flex items-center justify-between">
-                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Product categories</h2><p class="mt-1 text-[10px] text-gray-400">Categories available to SKU records.</p></div>
-                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">{{ $inventoryCategories->count() }}</span>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @forelse($inventoryCategories as $category)
-                        <span class="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[10px] font-semibold text-gray-700">{{ $category->name }} <span class="font-mono font-normal text-gray-400">{{ $category->code }}</span></span>
-                    @empty
-                        <span class="text-xs text-gray-400">No categories created yet.</span>
-                    @endforelse
-                </div>
-            </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-                <div class="mb-3 flex items-center justify-between">
-                    <div><h2 class="text-xs font-bold uppercase tracking-wider text-gray-900">Measurement units</h2><p class="mt-1 text-[10px] text-gray-400">Units available when registering goods.</p></div>
-                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-500">{{ $inventoryUnits->count() }}</span>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @forelse($inventoryUnits as $unit)
-                        <span class="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[10px] font-semibold text-gray-700">{{ $unit->name }} <span class="font-mono font-normal text-gray-400">{{ $unit->symbol }}</span></span>
-                    @empty
-                        <span class="text-xs text-gray-400">No units created yet.</span>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-        <div class="bg-slate-900 rounded-xl p-4 shadow-xs text-white">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider">Operational controls</h2>
-                    <p class="text-[10px] text-slate-400 mt-1">Use the stock ledger for receipts, issues, adjustments, and reservations.</p>
-                </div>
-                <i class="fa-solid fa-arrow-right-arrow-left text-slate-500"></i>
-            </div>
-            <div class="grid grid-cols-2 gap-2 text-[10px]">
-                <span class="rounded-lg bg-white/10 px-3 py-2">Receipts are traceable</span>
-                <span class="rounded-lg bg-white/10 px-3 py-2">Issues cannot go negative</span>
-                <span class="rounded-lg bg-white/10 px-3 py-2">Reservations are isolated</span>
-                <span class="rounded-lg bg-white/10 px-3 py-2">Every movement is immutable</span>
-            </div>
-        </div>
-    </div>
-
-    </div>
-
-    <div class="border border-[#dfe6e0] bg-white overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-400 font-bold uppercase tracking-wider border-b border-gray-200/80 text-[10px]">
-                        <th class="p-4 w-32">SKU Code</th>
-                        <th class="p-4">Material Part Description</th>
-                        <th class="p-4">Category</th>
-                        <th class="p-4">Unit</th>
-                        <th class="p-4 text-right">Unit Price</th>
-                        <th class="p-4 text-center w-32">Available Stock</th>
-                        <th class="p-4 text-center w-32">Safety Minimum</th>
-                        <th class="p-4 text-right w-40">Status Matrix</th>
+                    <tr class="bg-slate-50/75 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100 text-[10px]">
+                        <th class="px-6 py-3.5 w-36">{{ __('SKU Code') }}</th>
+                        <th class="px-6 py-3.5">{{ __('Material Part Description') }}</th>
+                        <th class="px-6 py-3.5">{{ __('Category') }}</th>
+                        <th class="px-6 py-3.5">{{ __('Unit') }}</th>
+                        <th class="px-6 py-3.5 text-right">{{ __('Unit Price') }}</th>
+                        <th class="px-6 py-3.5 text-center w-32">{{ __('Available Stock') }}</th>
+                        <th class="px-6 py-3.5 text-center w-32">{{ __('Safety Minimum') }}</th>
+                        <th class="px-6 py-3.5 text-right w-40">{{ __('Status Matrix') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-gray-600 font-medium">
+                <tbody class="divide-y divide-slate-100 text-slate-600 font-medium">
                     @forelse ($inventory as $item)
-                        <tr class="hover:bg-gray-50/40 transition-colors">
-                        <td class="p-4 font-mono font-bold text-gray-900">{{ $item->sku }}</td>
-                        <td class="p-4 text-gray-900 font-semibold">{{ $item->description }}</td>
-                        <td class="p-4 text-[#66766b]">{{ $item->category }}</td>
-                        <td class="p-4 text-[#66766b]">{{ $item->unit?->symbol ?? '—' }}</td>
-                        <td class="p-4 text-right font-mono text-gray-700">TZS {{ number_format($item->unit_price ?? 0, 2) }}</td>
-                        <td class="p-4 text-center font-bold text-red-600 bg-red-50/30">{{ $item->stock_count }}</td>
-                        <td class="p-4 text-center font-mono text-gray-400">{{ $item->safety_threshold }}</td>
-                        <td class="p-4 text-right">
-                            <span class="text-[9px] font-bold
-                                {{ $item->stock_count <= $item->safety_threshold
-                                    ? 'text-red-700 bg-red-50 border-red-200'
-                                    : 'text-green-700 bg-green-50 border-green-200' }}
-                                px-2 py-0.5 rounded border uppercase tracking-wide">
-                                
-                                {{ $item->stock_count <= $item->safety_threshold ? 'Low Stock' : 'Available' }}
-                            </span>
-                        </td>
-                    </tr>
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="px-6 py-4 font-mono font-bold text-slate-900">{{ $item->sku }}</td>
+                            <td class="px-6 py-4 text-slate-900 font-semibold">{{ $item->description }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $item->category }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $item->unit?->symbol ?? '—' }}</td>
+                            <td class="px-6 py-4 text-right font-mono text-slate-700">TZS {{ number_format($item->unit_price ?? 0, 2) }}</td>
+                            <td class="px-6 py-4 text-center font-bold {{ $item->stock_count <= $item->safety_threshold ? 'text-rose-600' : 'text-slate-900' }}">{{ $item->stock_count }}</td>
+                            <td class="px-6 py-4 text-center font-mono text-slate-400">{{ $item->safety_threshold }}</td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                                    {{ $item->stock_count <= $item->safety_threshold
+                                        ? 'text-rose-700 bg-rose-50 border border-rose-100'
+                                        : 'text-emerald-700 bg-emerald-50 border border-emerald-100' }}">
+                                    {{ $item->stock_count <= $item->safety_threshold ? __('Low Stock') : __('Available') }}
+                                </span>
+                            </td>
+                        </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="p-10 text-center text-xs text-[#8a978e]">No SKU records found for the current company.</td>
+                            <td colspan="8" class="px-6 py-12 text-center text-xs text-slate-400">
+                                <i class="fa-solid fa-boxes-stacked text-slate-300 text-2xl block mb-2"></i>
+                                {{ __('No SKU records found for the current company.') }}
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($inventory->hasPages())
+            <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+                {{ $inventory->links() }}
+            </div>
+        @endif
     </div>
 
+    <!-- Registration Modal -->
     <div 
         x-show="showModal" 
         class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
@@ -290,20 +167,20 @@
             x-show="showModal" 
             x-transition.opacity 
             @click="showModal = false"
-            class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+            class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
         ></div>
 
         <div 
             x-show="showModal" 
             x-transition.scale.95
-            class="relative w-full max-w-md transform rounded-xl bg-white p-5 text-left shadow-xl border border-gray-200 transition-all z-10"
+            class="relative w-full max-w-lg transform rounded-2xl bg-white p-6 sm:p-7 text-left shadow-2xl border border-slate-100 transition-all z-10"
         >
-            <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
                 <div>
-                    <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Register New SKU Resource</h3>
-                    <p class="text-[10px] text-gray-400 mt-0.5">Append a new part record to your current active company scope.</p>
+                    <h3 class="text-sm font-bold text-slate-900">{{ __('Register New SKU Resource') }}</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ __('Append a new item record to your current company inventory.') }}</p>
                 </div>
-                <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 transition">
+                <button @click="showModal = false" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition">
                     <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
@@ -312,83 +189,92 @@
                 @csrf
                 
                 <div>
-                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">SKU / Code Reference</label>
-                    <input type="text" id="sku" name="sku" required placeholder="e.g., CPL-HP-90" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono uppercase" readonly>
+                    <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('SKU / Code Reference') }}</label>
+                    <input type="text" id="sku" name="sku" required placeholder="e.g., SKU-101" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition font-mono uppercase" readonly>
                 </div>
 
                 <div>
-                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Material Part Description</label>
-                    <input type="text" name="description" required placeholder="e.g., High-Pressure Hydraulic Coupler" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all">
+                    <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Material Part Description') }}</label>
+                    <input type="text" name="description" required placeholder="{{ __('e.g., High-Pressure Hydraulic Coupler') }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition">
                 </div>
 
                 <div>
-                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Barcode</label>
-                    <input type="text" name="barcode" placeholder="Optional EAN or Code 128 value" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                    <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Barcode') }}</label>
+                    <input type="text" name="barcode" placeholder="{{ __('Optional EAN or Code 128 value') }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 font-mono">
                 </div>
 
-                <div>
-                    <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Unit Price</label>
-                    <input type="number" step="0.01" name="unit_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
-                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Buying Price</label>
-                        <input type="number" step="0.000001" name="buying_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Buying Price') }}</label>
+                        <input type="number" step="0.000001" name="buying_price" required placeholder="0.00" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 font-mono">
                     </div>
                     <div>
-                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Selling Price</label>
-                        <input type="number" step="0.000001" name="selling_price" required placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 font-mono">
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Selling Price') }}</label>
+                        <input type="number" step="0.000001" name="selling_price" required placeholder="0.00" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 font-mono">
                     </div>
+                </div>
+
+                <div>
+                    <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Unit Price') }}</label>
+                    <input type="number" step="0.01" name="unit_price" required placeholder="0.00" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition font-mono">
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Reorder point</label><input type="number" step="0.000001" name="reorder_point" value="5" min="0" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 font-mono text-gray-800"></div>
-                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Reorder quantity</label><input type="number" step="0.000001" name="reorder_quantity" min="0" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 font-mono text-gray-800"></div>
-                    <div><label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Cost method</label><select name="cost_method" class="w-full rounded-lg border border-gray-200 bg-gray-50/50 p-2 text-gray-800"><option value="weighted_average">Weighted average</option><option value="fifo">FIFO</option></select></div>
-                </div>
-                <div class="grid grid-cols-3 gap-3 text-[10px] text-slate-600">
-                    <label class="flex items-center gap-2"><input type="checkbox" name="track_batches" value="1" class="rounded"> Track batches</label>
-                    <label class="flex items-center gap-2"><input type="checkbox" name="track_serials" value="1" class="rounded"> Track serials</label>
-                    <label class="flex items-center gap-2"><input type="checkbox" name="track_expiry" value="1" class="rounded"> Track expiry</label>
+                    <div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Reorder point') }}</label>
+                        <input type="number" step="0.000001" name="reorder_point" value="5" min="0" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 font-mono text-slate-800">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Reorder quantity') }}</label>
+                        <input type="number" step="0.000001" name="reorder_quantity" min="0" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 font-mono text-slate-800">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Cost method') }}</label>
+                        <select name="cost_method" class="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-slate-800">
+                            <option value="weighted_average">{{ __('Weighted average') }}</option>
+                            <option value="fifo">{{ __('FIFO') }}</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Initial Stock Count</label>
-                        <input type="number" name="stock_count" value="0" min="0" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Category</label>
-                            <select name="category" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
-                                <option value="">Select category</option>
-                                @foreach ($inventoryCategories as $category)
-                                    <option value="{{ $category->name }}">{{ $category->name }} ({{ $category->code }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Unit</label>
-                            <select name="unit_id" class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800">
-                                <option value="">Select unit</option>
-                                @foreach ($inventoryUnits as $unit)
-                                    <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Category') }}</label>
+                        <select name="category" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800">
+                            <option value="">{{ __('Select category') }}</option>
+                            @foreach ($inventoryCategories as $category)
+                                <option value="{{ $category->name }}">{{ $category->name }} ({{ $category->code }})</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <label class="text-gray-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">Safety Minimum Threshold</label>
-                        <input type="number" name="safety_threshold" value="5" min="0" required class="w-full bg-gray-50/50 border border-gray-200 rounded-lg p-2 text-gray-800 outline-hidden focus:bg-white focus:border-gray-400 transition-all font-mono">
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Unit') }}</label>
+                        <select name="unit_id" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800">
+                            <option value="">{{ __('Select unit') }}</option>
+                            @foreach ($inventoryUnits as $unit)
+                                <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-gray-100 flex items-center justify-end space-x-2 mt-2">
-                    <button type="button" @click="showModal = false" class="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-50 transition shadow-xs">
-                        Cancel
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Initial Stock Count') }}</label>
+                        <input type="number" name="stock_count" value="0" min="0" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition font-mono">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 font-bold uppercase tracking-wider text-[10px] block mb-1.5">{{ __('Safety Minimum Threshold') }}</label>
+                        <input type="number" name="safety_threshold" value="5" min="0" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:bg-white focus:border-slate-400 transition font-mono">
+                    </div>
+                </div>
+
+                <div class="pt-5 border-t border-slate-100 flex items-center justify-end space-x-3 mt-4">
+                    <button type="button" @click="showModal = false" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 transition shadow-xs">
+                        {{ __('Cancel') }}
                     </button>
-                    <button type="submit" class="bg-[#025c78] hover:bg-[#014d64] text-white px-3 py-1.5 rounded-lg font-semibold transition shadow-xs">
-                        Commit SKU File
+                    <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-xl font-semibold transition shadow-xs">
+                        {{ __('Save Product') }}
                     </button>
                 </div>
             </form>
@@ -396,37 +282,82 @@
     </div>
 
 </div>
-<div x-show="showReturn || showStocktake || scannerOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" style="display:none">
-    <div @click.outside="closeOverlays()" class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl">
+
+<!-- Return & Stocktake Modal Overlays -->
+<div x-show="showReturn || showStocktake || scannerOpen" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4" style="display:none">
+    <div @click.outside="closeOverlays()" class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-slate-100">
         <template x-if="scannerOpen">
             <div>
-                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Camera scanner</h3><button @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900">{{ __('Camera scanner') }}</h3>
+                    <button @click="closeOverlays()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
                 <video x-ref="scannerVideo" autoplay playsinline class="mt-4 aspect-video w-full rounded-xl bg-slate-900 object-cover"></video>
-                <p class="mt-3 text-xs text-slate-500">Point the camera at a barcode. Scans are queued locally if the device is offline.</p>
+                <p class="mt-3 text-xs text-slate-500">{{ __('Point the camera at a barcode. Scans are queued locally if the device is offline.') }}</p>
             </div>
         </template>
         <template x-if="showReturn">
-            <form method="POST" action="{{ route('inventory.returns.store') }}" class="space-y-3">
+            <form method="POST" action="{{ route('inventory.returns.store') }}" class="space-y-4">
                 @csrf
-                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Record inventory return</h3><button type="button" @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
-                <select name="direction" required class="w-full rounded-lg border border-slate-200 p-2 text-xs"><option value="customer">Customer return</option><option value="supplier">Supplier return</option></select>
-                <div class="grid grid-cols-2 gap-2"><select name="inventory_id" required class="rounded-lg border border-slate-200 p-2 text-xs"><option value="">Product</option>@foreach($inventory as $item)<option value="{{ $item->id }}">{{ $item->sku }} · {{ $item->description }}</option>@endforeach</select><select name="warehouse_location_id" required class="rounded-lg border border-slate-200 p-2 text-xs"><option value="">Location</option>@foreach($inventoryLocations as $location)<option value="{{ $location->id }}">{{ $location->warehouse->code }} / {{ $location->code }}</option>@endforeach</select></div>
-                <div class="grid grid-cols-2 gap-2"><input name="reference_number" required placeholder="Return reference" class="rounded-lg border border-slate-200 p-2 text-xs"><input name="quantity" required type="number" step="0.000001" min="0.000001" placeholder="Quantity" class="rounded-lg border border-slate-200 p-2 text-xs"></div>
-                <div class="grid grid-cols-2 gap-2"><input name="unit_cost" required type="number" step="0.01" min="0" placeholder="Unit cost" class="rounded-lg border border-slate-200 p-2 text-xs"><input name="reason" placeholder="Reason" class="rounded-lg border border-slate-200 p-2 text-xs"></div>
-                <div class="flex justify-end"><button class="rounded-lg bg-[#025c78] px-4 py-2 text-xs font-semibold text-white">Save return</button></div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900">{{ __('Record inventory return') }}</h3>
+                    <button type="button" @click="closeOverlays()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <select name="direction" required class="w-full rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                    <option value="customer">{{ __('Customer return') }}</option>
+                    <option value="supplier">{{ __('Supplier return') }}</option>
+                </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <select name="inventory_id" required class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                        <option value="">{{ __('Product') }}</option>
+                        @foreach($inventory as $item)
+                            <option value="{{ $item->id }}">{{ $item->sku }} · {{ $item->description }}</option>
+                        @endforeach
+                    </select>
+                    <select name="warehouse_location_id" required class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                        <option value="">{{ __('Location') }}</option>
+                        @foreach($inventoryLocations as $location)
+                            <option value="{{ $location->id }}">{{ $location->warehouse->code }} / {{ $location->code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input name="reference_number" required placeholder="{{ __('Return reference') }}" class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                    <input name="quantity" required type="number" step="0.000001" min="0.000001" placeholder="{{ __('Quantity') }}" class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input name="unit_cost" required type="number" step="0.01" min="0" placeholder="{{ __('Unit cost') }}" class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                    <input name="reason" placeholder="{{ __('Reason') }}" class="rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" @click="closeOverlays()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">{{ __('Cancel') }}</button>
+                    <button type="submit" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800">{{ __('Save return') }}</button>
+                </div>
             </form>
         </template>
         <template x-if="showStocktake">
-            <form @submit.prevent="createStocktake()" class="space-y-3">
-                <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900">Start stocktake</h3><button type="button" @click="closeOverlays()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button></div>
-                <input x-model="stocktakeReference" required placeholder="Stocktake reference" class="w-full rounded-lg border border-slate-200 p-2 text-xs">
-                <select x-model="stocktakeLocation" required class="w-full rounded-lg border border-slate-200 p-2 text-xs"><option value="">Select location</option>@foreach($inventoryLocations as $location)<option value="{{ $location->id }}">{{ $location->warehouse->name }} / {{ $location->code }}</option>@endforeach</select>
-                <p class="text-[11px] text-slate-500">The system will snapshot expected quantities for every product in the selected location and send the count for reconciliation.</p>
-                <div class="flex justify-end"><button class="rounded-lg bg-[#025c78] px-4 py-2 text-xs font-semibold text-white">Create stocktake</button></div>
+            <form @submit.prevent="createStocktake()" class="space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900">{{ __('Start stocktake') }}</h3>
+                    <button type="button" @click="closeOverlays()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <input x-model="stocktakeReference" required placeholder="{{ __('Stocktake reference') }}" class="w-full rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                <select x-model="stocktakeLocation" required class="w-full rounded-xl border border-slate-200 p-2.5 text-xs bg-slate-50/50">
+                    <option value="">{{ __('Select location') }}</option>
+                    @foreach($inventoryLocations as $location)
+                        <option value="{{ $location->id }}">{{ $location->warehouse->name }} / {{ $location->code }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-slate-500">{{ __('The system will snapshot expected quantities for every product in the selected location and send the count for reconciliation.') }}</p>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" @click="closeOverlays()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">{{ __('Cancel') }}</button>
+                    <button type="submit" class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800">{{ __('Create stocktake') }}</button>
+                </div>
             </form>
         </template>
     </div>
 </div>
+
 <script>
     function inventoryOperations() {
         return {
@@ -443,13 +374,17 @@
             stocktakeReference: '',
             stocktakeLocation: '',
             async loadOperations() {
-                const [alertsResponse, valuationResponse] = await Promise.all([
-                    fetch('{{ route('inventory.alerts') }}', { headers: { Accept: 'application/json' } }),
-                    fetch('{{ route('inventory.valuation') }}', { headers: { Accept: 'application/json' } }),
-                ]);
-                this.alerts = alertsResponse.ok ? await alertsResponse.json() : [];
-                this.valuation = valuationResponse.ok ? await valuationResponse.json() : [];
-                this.totalValue = this.valuation.reduce((sum, row) => sum + Number(row.value || 0), 0);
+                try {
+                    const [alertsResponse, valuationResponse] = await Promise.all([
+                        fetch('{{ route('inventory.alerts') }}', { headers: { Accept: 'application/json' } }),
+                        fetch('{{ route('inventory.valuation') }}', { headers: { Accept: 'application/json' } }),
+                    ]);
+                    this.alerts = alertsResponse.ok ? await alertsResponse.json() : [];
+                    this.valuation = valuationResponse.ok ? await valuationResponse.json() : [];
+                    this.totalValue = this.valuation.reduce((sum, row) => sum + Number(row.value || 0), 0);
+                } catch (e) {
+                    // Silent catch for resilience
+                }
             },
             formatMoney(value) {
                 return `TZS ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -460,14 +395,14 @@
                 const response = await fetch(`{{ route('inventory.lookup') }}?code=${encodeURIComponent(this.scanCode)}`, { headers: { Accept: 'application/json' } });
                 if (! response.ok) {
                     if (! navigator.onLine && window.inventoryScanner) await window.inventoryScanner.queue(this.scanCode);
-                    this.scanError = response.status === 404 ? 'Product was not found in this company.' : 'Lookup failed. The scan was queued if you are offline.';
+                    this.scanError = response.status === 404 ? '{{ __('Product was not found in this company.') }}' : '{{ __('Lookup failed. The scan was queued if you are offline.') }}';
                     return;
                 }
                 this.scanResult = await response.json();
             },
             async startScanner() {
                 if (! window.inventoryScanner?.supportsCamera) {
-                    this.scanError = 'Camera barcode scanning is not supported by this browser. Enter the code manually.';
+                    this.scanError = '{{ __('Camera barcode scanning is not supported by this browser. Enter the code manually.') }}';
                     return;
                 }
                 this.scannerOpen = true;
@@ -512,15 +447,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         const skuInput = document.getElementById('sku');
         if(skuInput){
-            const randomNumber = Math.floor(Math.random() * 900) + 100; // Generates a random number between 100 and 999
-            const skuCode = `2BRO-${randomNumber}`;
+            const randomNumber = Math.floor(Math.random() * 900) + 100;
+            const skuCode = `SKU-${randomNumber}`;
             skuInput.value = skuCode;
         }
     });
-
-    //this is the script which will help in counting lines where status matrix is low
-
-    
-    
-
 </script>

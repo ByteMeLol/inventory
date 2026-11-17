@@ -84,7 +84,7 @@ class StaffController extends Controller
             ]);
         });
 
-        return redirect()->back()->with('success', 'Staff account created and assigned successfully. Temporary password: ' . $temporaryPassword);
+        return redirect()->back()->with('success', __('Staff account created and assigned successfully. Temporary password: :password', ['password' => $temporaryPassword]));
     }
 
     public function update(Request $request, User $staff)

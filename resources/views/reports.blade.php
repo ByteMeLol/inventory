@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        reports
+        {{ __('Reports') }}
     </x-slot:title>
    <x-success_alert />
    <x-reports />

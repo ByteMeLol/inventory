@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
+    <title>{{ __('Invoice') }} - {{ $sale->invoice_number }}</title>
     <style>
         @page { margin: 24px; }
         body {
@@ -45,9 +46,9 @@
                     <div class="muted">{{ $settings['company_phone'] }}</div>
                 </td>
                 <td class="right">
-                    <div class="badge">{{ $sale->status }}</div>
-                    <p style="margin: 10px 0 0 0;"><strong>Invoice:</strong> {{ $sale->invoice_number }}</p>
-                    <div class="muted">Date: {{ $sale->created_at?->format('d M Y, h:i A') }}</div>
+                    <div class="badge">{{ __($sale->status) }}</div>
+                    <p style="margin: 10px 0 0 0;"><strong>{{ __('Invoice:') }}</strong> {{ $sale->invoice_number }}</p>
+                    <div class="muted">{{ __('Date:') }} {{ $sale->created_at?->format('d M Y, h:i A') }}</div>
                 </td>
             </tr>
         </table>
@@ -57,7 +58,7 @@
         <table>
             <tr>
                 <td style="width: 50%; vertical-align: top;">
-                    <strong>Bill To</strong><br>
+                    <strong>{{ __('Bill To') }}</strong><br>
                     {{ $sale->customer->company_name }}<br>
                     @if($sale->customer->phone)
                         <span class="muted">{{ $sale->customer->phone }}</span><br>
@@ -67,10 +68,10 @@
                     @endif
                 </td>
                 <td style="width: 50%; vertical-align: top;" class="right">
-                    <strong>Sale Details</strong><br>
-                    <span class="muted">Billing Terms: {{ $sale->billing_terms }}</span><br>
-                    <span class="muted">Currency: {{ $settings['currency'] }}</span><br>
-                    <span class="muted">Timezone: {{ $settings['timezone'] }}</span>
+                    <strong>{{ __('Sale Details') }}</strong><br>
+                    <span class="muted">{{ __('Billing Terms:') }} {{ __($sale->billing_terms) }}</span><br>
+                    <span class="muted">{{ __('Currency:') }} {{ $settings['currency'] }}</span><br>
+                    <span class="muted">{{ __('Timezone:') }} {{ $settings['timezone'] }}</span>
                 </td>
             </tr>
         </table>
@@ -80,10 +81,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>Description</th>
-                    <th class="right">Qty</th>
-                    <th class="right">Unit Price</th>
-                    <th class="right">Line Total</th>
+                    <th>{{ __('Description') }}</th>
+                    <th class="right">{{ __('Qty') }}</th>
+                    <th class="right">{{ __('Unit Price') }}</th>
+                    <th class="right">{{ __('Line Total') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -91,7 +92,7 @@
                     <td>
                         {{ $sale->item_summary }}
                         @if($sale->inventory)
-                            <div class="muted" style="font-size: 10px; margin-top: 4px;">SKU: {{ $sale->inventory->sku }}</div>
+                            <div class="muted" style="font-size: 10px; margin-top: 4px;">{{ __('SKU:') }} {{ $sale->inventory->sku }}</div>
                         @endif
                     </td>
                     <td class="right">{{ $sale->quantity }}</td>
@@ -99,15 +100,15 @@
                     <td class="right">{{ $settings['currency'] }} {{ number_format($sale->total_amount, 2) }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td colspan="3" class="right">Subtotal</td>
+                    <td colspan="3" class="right">{{ __('Subtotal') }}</td>
                     <td class="right">{{ $settings['currency'] }} {{ number_format($sale->total_amount, 2) }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td colspan="3" class="right">VAT / Tax ({{ $settings['tax_rate'] }}%)</td>
-                    <td class="right">Included in system pricing</td>
+                    <td colspan="3" class="right">{{ __('VAT / Tax') }} ({{ $settings['tax_rate'] }}%)</td>
+                    <td class="right">{{ __('Included in system pricing') }}</td>
                 </tr>
                 <tr class="total-row">
-                    <td colspan="3" class="right">Grand Total</td>
+                    <td colspan="3" class="right">{{ __('Grand Total') }}</td>
                     <td class="right">{{ $settings['currency'] }} {{ number_format($sale->total_amount, 2) }}</td>
                 </tr>
             </tbody>
@@ -115,7 +116,7 @@
     </div>
 
     <div class="footer muted" style="margin-top: 18px; font-size: 10px;">
-        Generated for {{ $company->name }} in {{ $settings['timezone'] }}.
+        {{ __('Generated for :company in :timezone.', ['company' => $company->name, 'timezone' => $settings['timezone']]) }}
     </div>
 </body>
 </html>

@@ -72,7 +72,7 @@ class CompanyController extends Controller
             'active_company_name' => $company->name,
         ]);
 
-        return redirect()->back()->with('success', 'Company "' . $company->name . '" created successfully and selected as active workspace.');
+        return redirect()->back()->with('success', __('Company ":name" created successfully and selected as active workspace.', ['name' => $company->name]));
     }
 
     /**
@@ -97,6 +97,6 @@ class CompanyController extends Controller
             'active_company_name' => $company->name,
         ]);
 
-        return redirect()->back()->with('success', 'Active company scope switched to: ' . $company->name);
+        return redirect()->back()->with('success', __('Active company scope switched to: :name', ['name' => $company->name]));
     }
 }

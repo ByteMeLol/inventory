@@ -62,7 +62,7 @@ class SettingsController extends Controller
 
         return redirect()
             ->route('settings.edit')
-            ->with('success', 'Tanzania settings saved for ' . $company->name . '.');
+            ->with('success', __('Tanzania settings saved for :company.', ['company' => $company->name]));
     }
 
     private function resolveActiveCompany(Request $request): Company

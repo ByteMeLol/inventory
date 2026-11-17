@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        settings
+        {{ __('Settings') }}
     </x-slot:title>
    <x-success_alert />
    <x-settings

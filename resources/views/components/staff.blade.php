@@ -147,7 +147,7 @@
                                     <div>
                                         <p class="font-semibold text-slate-900">{{ $staffMember->first_name }} {{ $staffMember->last_name }}</p>
                                         <p class="mt-0.5 text-[11px] text-slate-400">{{ $staffMember->email }}</p>
-                                        <p class="mt-0.5 text-[11px] text-slate-400">{{ $staffMember->phone ?? 'No phone stored' }}</p>
+                                        <p class="mt-0.5 text-[11px] text-slate-400">{{ $staffMember->phone ?? __('No phone stored') }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -159,7 +159,7 @@
                             </td>
                             <td class="px-5 py-4">
                                 <span class="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700">
-                                    {{ str_replace('_', ' ', $staffMember->role?->name ?? 'staff') }}
+                                    {{ __(str_replace('_', ' ', $staffMember->role?->name ?? 'staff')) }}
                                 </span>
                             </td>
                             <td class="px-5 py-4">
@@ -185,7 +185,7 @@
                                         <span>{{ __('Assign / Edit') }}</span>
                                     </button>
 
-                                    <form action="{{ route('staff.destroy', $staffMember->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this staff member?');" class="inline">
+                                    <form action="{{ route('staff.destroy', $staffMember->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to remove this staff member?') }}');" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="rounded-lg border border-rose-200 bg-white p-1.5 text-rose-600 hover:bg-rose-50 transition" title="{{ __('Remove') }}">
@@ -261,7 +261,7 @@
                         <select name="role_id" id="create_role_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                             <option value="">{{ __('Select role') }}</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}" @selected((string) old('role_id') === (string) $role->id)>{{ str_replace('_', ' ', $role->name) }}</option>
+                                <option value="{{ $role->id }}" @selected((string) old('role_id') === (string) $role->id)>{{ __(str_replace('_', ' ', $role->name)) }}</option>
                             @endforeach
                         </select>
                         <x-error_handling name="role_id" />
@@ -337,7 +337,7 @@
                         <label for="edit_role_id" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-600">{{ __('Role') }}</label>
                         <select name="role_id" id="edit_role_id" x-model="editStaff.role_id" required class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white">
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ str_replace('_', ' ', $role->name) }}</option>
+                                <option value="{{ $role->id }}">{{ __(str_replace('_', ' ', $role->name)) }}</option>
                             @endforeach
                         </select>
                     </div>

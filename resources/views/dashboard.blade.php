@@ -1,6 +1,6 @@
 <x-layout>
    <x-slot:title>
-        dashboard
+        {{ __('Overview') }}
     </x-slot:title>
    <x-success_alert />
    <x-dashboard />
