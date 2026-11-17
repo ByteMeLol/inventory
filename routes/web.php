@@ -19,11 +19,13 @@ Route::get('/', function () {
     return view('index');
 });
 
+Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
+
 
 Route::get('/signin', function () {
     return view('index');
 })->name('login')->middleware('guest');
-Route::post('/login', [SessionController::class, 'create'])->name('login')->middleware('guest');
+Route::post('/login', [SessionController::class, 'create'])->name('login.attempt')->middleware('guest');
 
 Route::post('/logout', [SessionController::class, 'destroy'])->name('logout')->middleware('auth');
 

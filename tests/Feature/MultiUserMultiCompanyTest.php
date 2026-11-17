@@ -403,3 +403,25 @@ test('set active company session middleware restricts user to their own companie
     // Middleware should have reset session to User A's company!
     expect(session('company_id'))->toBe($companyA->id);
 });
+
+
+test('user can switch language between English and Kiswahili', function () {
+    // Switch to Kiswahili
+    $responseSw = $this->get('/language/sw');
+    $responseSw->assertRedirect();
+    expect(session('locale'))->toBe('sw');
+
+    // Make a request and verify translated Swahili text
+    $responsePage = $this->withSession(['locale' => 'sw'])->get('/');
+    $responsePage->assertOk();
+    $responsePage->assertSee('Ingia');
+
+    // Switch back to English
+    $responseEn = $this->get('/language/en');
+    $responseEn->assertRedirect();
+    expect(session('locale'))->toBe('en');
+
+    $responsePageEn = $this->withSession(['locale' => 'en'])->get('/');
+    $responsePageEn->assertOk();
+    $responsePageEn->assertSee('Sign in');
+});
